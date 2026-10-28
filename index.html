@@ -65,7 +65,7 @@ const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').r
 const group=(a,f)=>{const m={};a.forEach(r=>{const k=f(r);(m[k]=m[k]||[]).push(r)});return m};
 const pick=(a,set,f)=>!set.size?a:a.filter(x=>set.has(f(x)));
 const isTrF=f=>N(f.v).startsWith('TRACTO');
-const mg=e=>MM[N(e)]||FB[N(e)]||SIN;
+const nb=g=>N(g)==='INTERNACIONAL S13'?'INTERNACIONAL S13 450 HP':g,mg=e=>{const m=MM[N(e)];return nb(m&&!/^marca sub/i.test(m)?m:(FB[N(e)]||SIN))};
 function gF(f){return isTrF(f)?mg(f.e):(cr(f.c)||cr(f.v))}
 const SEGC=['Numero económico','Tipo de Unidad','Región','Marca','Categoría de Inmovilización','Estatus Actual','Último Estatus previo a entregado','Fecha de Inmovilización','Fecha Real de Entrega','Días Inmovilizado','Lugar Inmovilización','Causa de Inmovilización','Responsable','Comentario de Estatus','Estatus para gráfica'];
 function isoOf(v){if(v==null||v==='')return null;if(v instanceof Date)return dt(v);if(typeof v==='number'){const d=new Date(Math.round((v-25569)*864e5));return isNaN(d)?null:d.toISOString().slice(0,10)}const s=String(v).trim();if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.slice(0,10);const m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})$/);if(m)return(m[3].length==2?'20'+m[3]:m[3])+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');return null}
@@ -79,7 +79,7 @@ function ingest(){
  SEG=D.seg.map(a=>({e:a[0],t:a[1],r:a[2],m:a[3],c:a[4],s:a[5],p:a[6],i:a[7],o:a[8],d:a[9],l:a[10],k:a[11],w:a[12],n:a[13],eg:a[14]}));
  FL=D.fl.map(a=>({e:a[0],v:a[1],s:a[2],r:a[3],u:a[4],c:a[5],mo:a[6],ma:a[7]}));MM=D.mm;FLM=new Map(FL.map(f=>[N(f.e),f]));
  const L0={};SEG.filter(x=>x.t==='Tracto'&&MM[N(x.e)]&&x.m).forEach(x=>{const o=L0[x.m]=L0[x.m]||{};o[MM[N(x.e)]]=(o[MM[N(x.e)]]||0)+1});LM={};for(const k in L0)LM[k]=Object.entries(L0[k]).sort((a,b)=>b[1]-a[1])[0][0];
- FB={};SEG.filter(x=>x.t==='Tracto'&&!MM[N(x.e)]&&LM[x.m]).forEach(x=>FB[N(x.e)]=LM[x.m]);TG=new Set([...Object.values(MM),...Object.values(LM),SIN]);
+ FB={};SEG.filter(x=>x.t==='Tracto'&&!MM[N(x.e)]&&LM[x.m]).forEach(x=>FB[N(x.e)]=LM[x.m]);TG=new Set([...Object.values(MM),...Object.values(LM),SIN].filter(v=>!/^marca sub/i.test(v)).map(nb));
  SEG.forEach(x=>{const f=FLM.get(N(x.e));x.f=f;x.tr=x.t==='Tracto';x.reg=(f&&f.r)?cr(f.r):(cr(x.r)||'SIN REGIÓN');
   x.g=x.tr?mg(x.e):(f?gF(f):(cr(x.t)||'OTRO'))});
  const c={};SEG.filter(x=>x.i&&!x.o&&x.d>0).forEach(x=>{const k=add(x.i,x.d);c[k]=(c[k]||0)+1});
@@ -192,8 +192,8 @@ function T5(){const o=det(),cats=[...new Set(o.map(x=>x.c||'Sin categoría'))].s
  ${(()=>{const od=o.filter(x=>!S.tH.size||S.tH.has(x.t)).sort((a,b)=>days(b)-days(a));return `<div class="card"><h3>Detalle (${od.length})</h3><div class="fbar">${chips('tH',['Tracto','Remolque','Dolly'],'Tipo')}</div>${tbl(HC,od.map(x=>ev(x,SEG.indexOf(x),1)),'wr')}</div>`})()}`}
 const FALLAS=['Falla/daño en motor','Falla/daño eléctrico','Falla/daño en carrocería','Falla/daño en transmisión','Falla/daño en frenos','Falla/daño en suspensión','Siniestro','Falla/daño en dirección','Falla A/C','Falla/daño en llantas'];
 function heatCard(e){const ev=S.hmAll?e:e.filter(x=>TG.has(x.g)),val=x=>S.hmM==='d'?(x.o?dd(x.i,x.o):days(x)):1,idx=x=>{const k=FALLAS.findIndex(f=>N(f)===N(x.c));return k<0?FALLAS.length:k};
- const bs=[...new Set([...(S.hmAll?[...TG,...ev.map(x=>x.g)]:[...TG]).filter(g=>g!==SIN||ev.some(x=>x.g===g))])],M={};bs.forEach(b=>M[b]=Array(FALLAS.length+1).fill(0));
- ev.forEach(x=>{if(M[x.g])M[x.g][idx(x)]+=val(x)});
+ const hg=g=>/^REMOLQUE/i.test(g)?'REMOLQUE':g,bs=[...new Set((S.hmAll?[...TG,...ev.map(x=>x.g)]:[...TG]).filter(g=>g!==SIN||ev.some(x=>x.g===g)).map(hg))],M={};bs.forEach(b=>M[b]=Array(FALLAS.length+1).fill(0));
+ ev.forEach(x=>{const b=hg(x.g);if(M[b])M[b][idx(x)]+=val(x)});
  const hasO=bs.some(b=>M[b][FALLAS.length]>0),nc=FALLAS.length+(hasO?1:0),rows=bs.map(b=>({b,v:M[b].slice(0,nc),t:sum(M[b].slice(0,nc),v=>v)})).sort((a,c)=>c.t-a.t||a.b.localeCompare(c.b)),
   gmax=Math.max(1,...rows.flatMap(r=>r.v)),tot=Array.from({length:nc},(_,j)=>sum(rows,r=>r.v[j])),gt=sum(tot,v=>v),un=S.hmM==='d'?' d':'';
  const cell=(v,mx,t)=>{if(!v)return '<td class="hz">·</td>';const a=.12+.88*(v/mx);return `<td style="background:rgba(224,57,75,${a.toFixed(2)});color:${a>.55?'#fff':'var(--tx)'};font-weight:${a>.55?800:500}" title="${esc(t)}: ${fmt(v)}${un}">${fmt(v)}</td>`};
