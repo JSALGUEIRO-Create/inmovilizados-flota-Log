@@ -424,16 +424,17 @@ function parseF(t){const cy=+S.corte.slice(0,4),cm=+S.corte.slice(5,7),F={},ym=t
  else if(wd(t,'este mes|mes actual|este mes')){F.from=ymd(cy,cm,1);F.to=ymd(cy,cm,31);F.lab=MN[cm-1]+' '+cy}
  else if(yr){F.from=yr+'-01-01';F.to=yr+'-12-31';F.lab=String(yr)}
  else if(wd(t,'este ano|en el ano|del ano|ano actual')){F.from=cy+'-01-01';F.to=cy+'-12-31';F.lab=String(cy)}
- const regs=[...new Set(SEG.map(x=>x.reg).filter(Boolean))].filter(r=>wd(t,nrm(r).replace(/[^a-z0-9 ]/g,'')));if(regs.length)F.reg=regs;
+ const regs=[...new Set(SEG.map(x=>x.reg).filter(Boolean))].filter(r=>{const n=nrm(r).replace(/[^a-z0-9 ]/g,''),b=n.replace(/\s*\d+$/,'');return wd(t,n)||(b!==n&&wd(t,b)&&!new RegExp(b+'\\s*\\d').test(t))});if(regs.length)F.reg=regs;
  const gs=[...new Set(SEG.map(x=>x.g).filter(Boolean))].filter(g=>{const n=nrm(g),tk=n.split(/[\s.\-]+/).filter(Boolean),last=tk[tk.length-1];return t.includes(n)||(last.length>=3&&wd(t,last.replace(/[^a-z0-9]/g,'')))});if(gs.length)F.g=gs;
  if(wd(t,'tractos?|tractocamion(es)?'))F.t='Tracto';else if(wd(t,'remolques?'))F.t='Remolque';else if(wd(t,'dollys?|dolly'))F.t='Dolly';
  const rs=['mantenimiento','compras','riesgos','logistica'].filter(r=>wd(t,r));if(rs.length)F.w=rs;
  const cs=[['motor','motor'],['frenos?','frenos'],['carroceria','carrocería'],['electric[oa]','eléctrico'],['transmision','transmisión'],['siniestros?','Siniestro'],['suspension','suspensión'],['direccion','dirección'],['clutch','clutch']].filter(([r])=>wd(t,r));if(cs.length)F.c=cs.map(a=>nrm(a[1]));
+ F.ref=wd(t,'falta de refacciones?|por refacciones?|sin refacciones?|esperando refacciones?');
  F.open=!F.from&&wd(t,'abiertas?|hoy|actualmente|ahorita|ahora|vigentes?|siguen|detenid[oa]s?|inmovilizad[oa]s? hoy');
  return F}
 function sel(F,per=true,ex){return SEG.filter(x=>{if(!x.i)return false;if(ex&&!ex(x))return false;if(F.t&&x.t!==F.t)return false;if(F.reg&&!F.reg.includes(x.reg))return false;if(F.g&&!F.g.includes(x.g))return false;
  if(F.w&&!F.w.includes(nrm(x.w)))return false;if(F.c&&!F.c.some(c=>nrm(x.c).includes(c)))return false;if(F.open&&x.o)return false;if(per==='ov'){if(F.from&&!(x.i<=F.to&&(!x.o||x.o>=F.from)))return false}else if(per&&F.from&&(x.i<F.from||x.i>F.to))return false;return true})}
-function ctx(F){const a=[];if(F.lab)a.push(F.lab);if(F.open)a.push('abiertas hoy');if(F.reg)a.push(F.reg.join('/'));if(F.g)a.push(F.g.join('/'));if(F.t)a.push(F.t.toLowerCase()+'s');if(F.w)a.push('resp. '+F.w.join('/'));if(F.c)a.push('causa '+F.c.join('/'));return a.length?a.join(' · '):'todo el histórico'}
+function ctx(F){const a=[];if(F.lab)a.push(F.lab);if(F.open)a.push('abiertas hoy');if(F.reg)a.push(F.reg.join('/'));if(F.g)a.push(F.g.join('/'));if(F.t)a.push(F.t.toLowerCase()+'s');if(F.w)a.push('resp. '+F.w.join('/'));if(F.c)a.push('causa '+F.c.join('/'));if(F.ref)a.push('falta de refacciones');return a.length?a.join(' · '):'todo el histórico'}
 function bars(rows,u,cls){const mx=Math.max(1,...rows.map(r=>r.v));return rows.map(r=>`<div class="r ${cls||''}"><span title="${E(r.k)}">${E(r.k)}</span><i style="width:${100*r.v/mx}%"></i><b>${r.l||fm(r.v)+(u||'')}</b></div>`).join('')}
 function rank(evs,kf,metric){const m=new Map();evs.forEach(x=>{const k=kf(x);if(k==null||k==='')return;const o=m.get(k)||{k,c:0,d:0};o.c++;o.d+=dur(x);m.set(k,o)});return [...m.values()].map(o=>({...o,v:metric==='d'?o.d:o.c,avg:o.d/o.c}))}
 function partsAns(F){const evs=SEG.filter(x=>x.t==='Tracto'&&x.i&&(x.w==='Compras'||x.eg==='Falta de Refacciones')&&(!F.reg||F.reg.includes(x.reg))&&(!F.g||F.g.includes(x.g))&&(!F.from||(x.i>=F.from&&x.i<=F.to))&&(!F.open||!x.o)),m=new Map();let sn=0;
@@ -510,6 +511,61 @@ function buildRetire(F,tipo){const {us,avgN}=retire(F,tipo),wb=XLSX.utils.book_n
  const ids=new Set(top.map(u=>u.e));XLSX.utils.book_append_sheet(wb,mkSheet([['Económico','Ingreso','Salida','Días','Causa','Detalle','Responsable','Estatus','Último comentario']].concat(sel(F,true,x=>ids.has(x.e)&&x.t===tipo).sort((a,b)=>a.e.localeCompare(b.e)||b.i.localeCompare(a.i)).map(x=>[x.e,x.i,x.o||'Abierta',dur(x),x.c,x.k,x.w,x.p||x.s,String(x.n||'').split(/\r?\n/)[0]])),[11,11,11,7,28,30,14,28,70]),'Historial de correctivos');
  XLSX.utils.book_append_sheet(wb,mkSheet([['Concepto','Valor'],['Alcance',tipo+'s · '+ctx(F)],['Fecha de corte',S.corte],['Generado por',WHO+' (Paquetín)'],['Criterio','Puntaje = 40% número de correctivos + 30% días fuera de operación + 15% reincidencia de una misma falla + 15% antigüedad. No incluye siniestros ni pérdidas totales.'],['Limitación','No considera costos de reparación, valor en libros/mercado, kilometraje ni disponibilidad de reemplazo.']],[24,120]),'Parámetros');
  return{wb,name:'Paquetin_candidatas_venta_'+ISO()+'.xlsx'}}
+const MX=(a)=>a.length?a.reduce((p,q)=>p>q?p:q):0;
+function dayN(){return +S.corte.slice(8,10)}
+function ymAdd(y,m,k){const z=y*12+(m-1)+k;return [Math.floor(z/12),z%12+1]}
+const ymk=(y,m)=>y+'-'+String(m).padStart(2,'0');
+function tgts(t){const cy=+S.corte.slice(0,4),cm=+S.corte.slice(5,7),o=[],yr=(t.match(/\b(20\d\d)\b/)||[])[1];
+ const nn=t.match(/proxim[oa]s\s+(\d{1,2})\s+mes/);
+ if(nn){for(let k=1;k<=Math.min(12,+nn[1]);k++)o.push(ymAdd(cy,cm,k));return o}
+ if(wd(t,'fin de ano|cerrar el ano|cierre de ano|resto del ano|terminar el ano|finalizar el ano|cerrar ano|cerrar el 20\\d\\d')){for(let m=cm+1;m<=12;m++)o.push([cy,m]);if(!o.length)o.push([cy+1,1]);return o}
+ if(wd(t,'proximo ano|siguiente ano')||(yr&&+yr>cy&&!MN.some(n=>wd(t,n)))){const y=yr?+yr:cy+1;for(let m=1;m<=12;m++)o.push([y,m]);return o}
+ const ms=[];MN.forEach((n,i)=>{if(wd(t,n))ms.push(i+1)});
+ if(ms.length){const a=Math.min(...ms),b=Math.max(...ms);for(let m=a;m<=b;m++){const y=yr?+yr:(m>=cm?cy:cy+1);if(y*12+m>=cy*12+cm)o.push([y,m])}if(o.length)return o}
+ if(wd(t,'proxim[oa] mes|siguiente mes|mes que viene|mes proximo|mes entrante'))return [ymAdd(cy,cm,1)];
+ if(wd(t,'este mes|mes actual|cierre de mes|cerrar el mes|fin de mes'))return [[cy,cm]];
+ return [ymAdd(cy,cm,1)]}
+function isFut(t,F){const cy=+S.corte.slice(0,4),cm=+S.corte.slice(5,7);
+ if(wd(t,'proxim[oa]s?|siguiente|podrian?|podria|podran|habra|pronostic[a-z]*|proyecc?i[a-z]*|prediccion|predecir|prediga|estim[a-z]*|a futuro|futuro|se espera|esperar[a-z]*|cerrar[a-z]*|fin de ano|finalizar[a-z]*|terminar[a-z]*|va a|vamos a|iran|tendencia a|seran|sera|llegar[a-z]*|llegaria|alcanzar[a-z]*'))return !wd(t,'ya|ultimo|pasad[oa]');
+ const yr=(t.match(/\b(20\d\d)\b/)||[])[1];return !!(yr&&+yr>cy)}
+function forecastAns(t,F){const cy=+S.corte.slice(0,4),cm=+S.corte.slice(5,7),dn=dayN(),T=tgts(t),F0={...F,from:null,open:false};
+ const all=sel(F0,false),en=new Map(),sa=new Map();all.forEach(x=>{const k=x.i.slice(0,7);en.set(k,(en.get(k)||0)+1);if(x.o){const q=x.o.slice(0,7);sa.set(q,(sa.get(q)||0)+1)}});
+ const cur=ymk(cy,cm),L=[];for(let k=12;k>=1;k--){const [y,m]=ymAdd(cy,cm,-k);L.push(ymk(y,m))}
+ const v=a=>a.map(k=>en.get(k)||0),e12=v(L),m12=sum(e12,x=>x)/12,m3=sum(e12.slice(-3),x=>x)/3,sd=Math.sqrt(sum(e12,x=>(x-m12)*(x-m12))/12),s3=L.slice(-3).map(k=>sa.get(k)||0),x3=sum(s3,x=>x)/3,hist=MX([...en.keys()].map(k=>+k.slice(0,4)));
+ if(sum(e12,x=>x)<12)return `Para proyectar necesito más historia de inmovilizaciones para <b>${E(ctx({...F,from:null,lab:null}))}</b> (solo hay ${sum(e12,x=>x)} en los últimos 12 meses), así que preferí no inventar un número.`;
+ const ab=sel({...F,from:null,open:true},false).length,rows=[];let sumE=0,sumSd=0;
+ T.forEach(([y,m])=>{const k=ymk(y,m),ly=en.get(ymk(y-1,m)),has=ly!=null&&ly>0&&all.some(x=>x.i.slice(0,4)<String(y-1)+'');let E1=has?.5*m3+.3*m12+.2*ly:.6*m3+.4*m12,note='';
+  if(k===cur){const o=en.get(cur)||0,run=o/dn*new Date(y,m,0).getDate();E1=Math.max(o,.5*E1+.5*run);note=` (ya van ${o} al día ${dn})`}
+  sumE+=E1;sumSd+=sd*sd;rows.push({k:MES[m-1]+' '+y+note,v:E1,l:'≈ '+fm(E1)+' [ '+fm(Math.max(0,E1-sd))+'–'+fm(E1+sd)+' ]',ly:has?ly:null})});
+ const kk=T.length,rng=Math.sqrt(sumSd),pe=Math.max(0,ab+sumE-kk*x3),last=T[T.length-1],lab=T.length>1?MES[T[0][1]-1]+' '+T[0][0]+' a '+MES[last[1]-1]+' '+last[0]:MES[last[1]-1]+' '+last[0];
+ const hs=L.slice(-6).map(k=>({k:MES[+k.slice(5)-1]+' '+k.slice(0,4),v:en.get(k)||0})),bh=bars(hs,'');
+ return `<b>Proyección · ${E(lab)}</b> (${E(ctx({...F,from:null,lab:null,open:false}))})<br>Nuevas inmovilizaciones esperadas: <b>≈ ${fm(sumE)}</b> (rango probable ${fm(Math.max(0,sumE-rng))} a ${fm(sumE+rng)}).<br>Unidades detenidas estimadas al cierre de ${E(lab.split(' a ').pop())}: <b>≈ ${fm(pe)}</b> (hoy hay ${ab}).<div style="margin-top:6px">${bars(rows.map(r=>({k:r.k,v:r.v,l:r.l})),'','f')}</div><div class="nt"><b>Justificación:</b> promedio de entradas de los últimos 3 meses completos = ${fm(m3,1)}; de los últimos 12 = ${fm(m12,1)}${rows[0].ly!=null?`; mismo mes del año anterior = ${rows[0].ly}`:''}. La proyección pondera 50% reciente, 30% anual${rows[0].ly!=null?' y 20% estacional':''}. Las salidas se estiman con el promedio de los últimos 3 meses (${fm(x3,1)} por mes) y las detenidas al cierre = hoy + entradas − salidas. El rango es ± una desviación estándar de los últimos 12 meses (${fm(sd,1)}).</div><div style="margin-top:6px">Últimos meses reales:${bh}</div><div class="nt">⚠️ Es una estimación estadística basada en el comportamiento histórico; puede fallar por eventos no previsibles (siniestros, cambios en la operación, temporadas, tiempos de reparación o de entrega de refacciones). Úsala como referencia de planeación.</div>`}
+function uptimeAns(t,F){try{const at=actTr(),dt=SEG.filter(x=>x.i&&!x.o&&x.tr),u=up(at.length,dt.length),rows=regTable().filter(r=>r.a).sort((a,b)=>a.u-b.u);
+ return `Al corte del <b>${S.corte}</b>, el Up Time de tractos es <b>${fm(u,1)}%</b>: ${at.length} tractos en la flota activa y ${dt.length} detenidos (${fm(sum(dt,days))} días acumulados).<div style="margin-top:6px">${bars(rows.map(r=>({k:r.r,v:r.u,l:fm(r.u,1)+'% · '+r.n+' det.'})))}</div><div class="nt">Up Time = 1 − tractos detenidos ÷ flota activa de tractos. Detalle en 📊 Resumen y Up Time.</div><span class="go" onclick="pqGo(1)">Abrir Resumen y Up Time →</span>`}catch(e){return 'No pude calcular el Up Time en este momento; revísalo en 📊 Resumen y Up Time.'}}
+function analytic(t,F){const has=wd(t,'dias?|tiempo|promedio|media|cuant[oa]s?|total|suma|sumo|suman|numero|hay|tenemos|unidades|inmoviliz[a-z]*|detenid[a-z]*|mas|menos|mayor|menor|top|ranking|porcentaje|%|veces');
+ const rankW=wd(t,'mas|mayor(es)?|top|ranking|principal(es)?|peor(es)?|menos|menor(es)?|maxim[oa]|minim[oa]|cual(es)?|que region|que marca|que causa|que unidad|que movil');
+ const asc=wd(t,'menos|menor(es)?|minim[oa]'),hist=wd(t,'historic[a-z]*|desde siempre|todo el registro|veces|se ha |se han |han estado|ha estado|alguna vez|total historico');
+ const avgW=wd(t,'promedio|media|en promedio'),dayW=wd(t,'dias?|tiempo|tardan?|llev[a-z]*|acumulad[oa]s?|perdid[oa]s?|dias unidad|duracion');
+ const grp=(()=>{const need=wd(t,'por|cada|segun|desglos[a-z]*|agrup[a-z]*|distribucion')||rankW;
+  if(wd(t,'por mes|mensual(es)?|cada mes|mes por mes|mes a mes|evolucion'))return['mes',x=>(F.open?x.i:x.i).slice(0,7),'mes'];
+  if(wd(t,'cada (unidad|uno|economico|movil|tracto|remolque|dolly)|por (unidad|economico|movil)|economicos? (que|con)|movil(es)? (que|con)|unidad(es)? (que|con)|(unidad|movil|economico)(es)? mas')||(rankW&&wd(t,'movil(es)?|economicos?|unidad(es)?|tractos?|remolques?|dollys?')&&wd(t,'veces|lleva|llevan|dias|tiempo|mas|mayor|menos'))&&!wd(t,'region|marca|causa|responsable'))return['unidad',x=>x.e,'unidad'];
+  if(need&&wd(t,'region(es)?'))return['región',x=>x.reg,'región'];if(need&&wd(t,'marcas?|sub ?motor'))return['marca sub motor',x=>x.g,'marca'];
+  if(need&&wd(t,'causas?|fallas?|motivos?|danos?'))return['causa',x=>x.c,'causa'];if(need&&wd(t,'responsables?|areas?'))return['responsable',x=>x.w,'responsable'];
+  if(need&&wd(t,'estatus|estados?|talleres?'))return['estatus',x=>x.p||x.s,'estatus'];if(need&&wd(t,'sucursal(es)?|plazas?|lugar(es)?|ciudad(es)?'))return['lugar',x=>x.l,'lugar'];
+  if(need&&wd(t,'tipos? de unidad|tipos?'))return['tipo',x=>x.t,'tipo'];return null})();
+ const known=F.reg||F.g||F.t||F.w||F.c||F.from||F.open||F.ref||grp;if(!has||!(known||dayW||wd(t,'cuant[oa]s?|total|suma|hay|tenemos|numero')))return null;
+ const G={...F};let nota='';if(!G.from&&!G.open&&!hist){G.open=true;nota='Sin periodo indicado, considero las unidades detenidas al corte.'}
+ const evs=sel(G,G.open?false:true,G.ref?isRef:null);if(!evs.length)return `No encontré información para <b>${E(ctx(G))}</b>.`;
+ const n=evs.length,U=new Set(evs.map(x=>x.e)).size,D=sum(evs,dur),av=D/n,mxu=evs.reduce((p,q)=>dur(q)>dur(p)?q:p),tipo=G.t?G.t.toLowerCase()+'s':'unidades';
+ const em=avgW?'avg':(dayW&&!wd(t,'veces'))?'d':'n',B=(k,s)=>(em===k?'<b>'+s+'</b>':s);
+ const lead=G.open?`Al corte del <b>${S.corte}</b>${ctx({...G,open:false,lab:null})!=='todo el histórico'?' ('+E(ctx({...G,open:false,lab:null}))+')':''}, hay ${B('n','<b>'+n+'</b>')} ${G.t?(n===1?tipo.slice(0,-1):tipo):(n===1?'unidad':'unidades')} ${G.t==='Tracto'?(n===1?'detenido':'detenidos'):(n===1?'detenida':'detenidas')} que ${n===1?'suma':'suman'} ${B('d','<b>'+fm(D)+'</b> días')} de inmovilización, con un promedio de ${B('avg','<b>'+fm(av,1)+'</b> días')} por unidad; la que más tiempo lleva es <b>${E(mxu.e)}</b> con ${dur(mxu)} días.`
+  :`En <b>${E(ctx(G))}</b> se registraron ${B('n','<b>'+n+'</b>')} inmovilizaciones (${U} unidades distintas) que suman ${B('d','<b>'+fm(D)+'</b> días')}, con un promedio de ${B('avg','<b>'+fm(av,1)+'</b> días')} por evento.`;
+ let g=grp;if(!g&&!rankW)g=G.reg?['tipo',x=>x.t,'tipo']:['región',x=>x.reg,'región'];if(!g)g=['región',x=>x.reg,'región'];
+ let rows=rank(evs,g[1],em==='d'?'d':'c').map(r=>({...r,vv:em==='avg'?r.avg:em==='d'?r.d:r.c}));
+ if(g[2]==='mes')rows.sort((a,b)=>String(a.k).localeCompare(String(b.k)));else rows.sort((a,b)=>asc?a.vv-b.vv:b.vv-a.vv||b.d-a.d);
+ const top=rows[0],tx=rankW&&g[2]!=='mes'&&grp?`<br>${asc?'Menor':'Mayor'} ${em==='d'?'tiempo acumulado':em==='avg'?'promedio':'número de inmovilizaciones'} por <b>${g[0]}</b>: <b>${E(top.k)}</b> (${em==='d'?fm(top.d)+' d':em==='avg'?fm(top.avg,1)+' d':top.c}).`:'';
+ const lim=g[2]==='mes'?24:8;
+ return `${lead}${tx}<div style="margin-top:6px">${bars(rows.slice(-lim<0?0:g[2]==='mes'?-lim:0).slice(0,g[2]==='mes'?lim:lim).map(r=>({k:r.k,v:r.vv,l:(em==='avg'?fm(r.avg,1)+' d prom.':em==='d'?fm(r.d)+' d · '+r.c:r.c+' · '+fm(r.avg)+' d prom.')})))}</div><div class="nt">${nota?E(nota)+' ':''}${G.open?'Días = desde el ingreso hasta el corte.':'Cada ingreso al Seguimiento cuenta como una inmovilización (por fecha de ingreso); días = ingreso a salida o al corte si sigue abierta.'}</div>`}
 function unitAns(id){const ev=SEG.filter(x=>String(x.e).toLowerCase()===id.toLowerCase()).sort((a,b)=>(b.i||'').localeCompare(a.i||''));if(!ev.length)return null;const o=ev.filter(x=>!x.o),f=FLM&&FLM.get?FLM.get(N(ev[0].e)):null;
  return `<b>${E(ev[0].e)}</b> (${E(ev[0].t)} · ${E(ev[0].g||'')} · ${E(ev[0].reg)}): <b>${ev.length}</b> inmovilizaciones registradas, ${fm(sum(ev,dur))} días acumulados. ${o.length?`<b>Hoy está detenida</b> desde ${E(o[0].i)} (${dur(o[0])} d) · ${E(o[0].p||o[0].s)} · resp. ${E(o[0].w)}.`:'Hoy no tiene inmovilización abierta.'}<div style="margin-top:6px">${ev.slice(0,4).map(x=>`<div class="r" style="grid-template-columns:auto 1fr"><b>${E(x.i)}</b><span>${E(x.c)} · ${dur(x)} d${x.o?'':' (abierta)'} · ${E(x.w)}</span></div>`).join('')}</div>${o.length&&o[0].n?`<div class="nt">Último comentario: ${E(String(o[0].n).split(/\r?\n/)[0].slice(0,160))}</div>`:''}`}
 function ans(q){const t=nrm(q).replace(/inmobil/g,'inmovil').replace(/refaccion(es)?/g,m=>m);const F=parseF(t);
@@ -517,34 +573,23 @@ function ans(q){const t=nrm(q).replace(/inmobil/g,'inmovil').replace(/refaccion(
  if(wd(t,'hola|buenas|buenos dias|buenas tardes|hey')&&t.split(' ').length<4)return `¡Hola, ${E(WHO)}! 😊 Pregúntame sobre las unidades detenidas, Up Time, regiones, marcas, fallas, refacciones o una unidad en particular.`;
  if(wd(t,'ayuda|que puedes|que sabes|que haces|como funcionas'))return HELP();
  const idm=t.match(/\b(m\d{5,7}|\d{3,6})\b/);if(idm){const u=unitAns(idm[1]);if(u)return u}
- if(wd(t,'renovacion|renovar|vender|venta|vendidas?|dar de baja|baja|bajas|sacar(los|las)? a la venta|desinvertir|reemplaz[a-z]*|sustituir|sustitucion|obsolet[a-z]*|candidat[a-z]*|desechar|descartar|retirar|salir de la flota')&&wd(t,'tractos?|unidad(es)?|moviles?|remolques?|dollys?|equipos?|flota|economicos?|camion(es)?'))return retireAns(t,F);
+ if(wd(t,'renovacion|renovar|vender|venta|vendidas?|dar de baja|baja|bajas|sacar(los|las)? a la venta|desinvertir|reemplaz[a-z]*|sustituir|sustitucion|obsolet[a-z]*|candidat[a-z]*|desechar|descartar|retirar|salir de la flota')&&wd(t,'tractos?|unidad(es)?|movil(es)?|remolques?|dollys?|equipos?|flota|economicos?|camion(es)?'))return retireAns(t,F);
+ if(isFut(t,F))return forecastAns(t,F);
+ if(wd(t,'up ?time|uptime|disponibilidad|operando|operan|opera')&&!wd(t,'refaccion|pieza'))return uptimeAns(t,F);
  const rankW=wd(t,'mas|mayor|mayores|top|ranking|principal|principales|peor|peores|menos|menor|cual|cuales|que');
  const asc=wd(t,'menos|menor|minimo|minima');
  if(wd(t,'excel|xlsx|descargable|descargar|descarga|hoja de calculo|reporte|reportes|exportar|exporta|archivo'))return reportAns(t,F);
  if(wd(t,'recomiend[a-z]*|recomendacion|stock|inventario|resurtir|surtir|abastec[a-z]*|comprar|sugier[a-z]*|sugerencia|conviene|prioriza[a-z]*')&&wd(t,REF+'|stock|inventario|resurtir|surtir|abastec[a-z]*'))return stockAns(F);
  if(wd(t,'analisis|analiza|analizar|diagnostico|resumen ejecutivo|conclusiones?'))return wd(t,REF)?stockAns(F):analysisAns(F);
- if(wd(t,'refaccion(es)?|pieza(s)?|repuestos?|componentes?')||wd(t,'falta de refacciones?')&&rankW)return partsAns(F);
+ if(wd(t,'refaccion(es)?|pieza(s)?|repuestos?|componentes?')||wd(t,'falta de refacciones?')&&rankW){const pq=wd(t,'pieza(s)?|repuestos?|componentes?')||wd(t,'(que|cual|cuales) refaccion(es)?|refacciones? (mas|que|son|me)|refaccion(es)? (mas|que causa|que causo|que detien)');if(!pq&&F.ref){const A=analytic(t,F);if(A)return A}return partsAns(F)}
  if(wd(t,'acumulad[oa]s?')){const R0=getResp(),ks=R0.map(r=>r[0]*100+r[1]),last=ks[ks.length-1],ly=Math.floor(last/100),fk=F.from?+(F.from.slice(0,4)+F.from.slice(5,7)):ly*100+1,tk=F.to?+(F.to.slice(0,4)+F.to.slice(5,7)):last,sl=R0.filter((r,i)=>ks[i]>=fk&&ks[i]<=tk);if(!sl.length)return 'No tengo la tabla mensual de responsables para ese periodo (solo tractos, '+MES[R0[0][1]-1]+' '+R0[0][0]+' a '+MES[R0[R0.length-1][1]-1]+' '+R0[R0.length-1][0]+').';
   const cs=RCAT.map((_,j)=>sum(sl,r=>r[2+j])),rows=RRESP.map(([n,ix])=>({k:n,v:sum(ix,j=>cs[j])})).filter(r=>!F.w||F.w.includes(nrm(r.k))),tot=sum(RRESP,([n,ix])=>sum(ix,j=>cs[j]));rows.sort((a,b)=>b.v-a.v);
   return `Días acumulados por responsable (solo tractos, ${sl.length} mes${sl.length>1?'es':''}): <div style="margin-top:6px">${bars(rows.map(r=>({k:r.k,v:r.v,l:fm(r.v)+' d · '+fm(100*r.v/tot,1)+'%'})),'')}</div><div class="nt">Fuente: tabla mensual de responsables (Resumen Up Time). Detalle por concepto: Mantenimiento = reparación interna + taller externo.</div>`}
- if(wd(t,'promedio|tarda|tardan|demora|resolver|resolucion|resuelve|duracion')&&wd(t,'dias|tiempo|tarda|tardan|demora|resolver|resolucion|resuelve|duracion|promedio')){const evs=SEG.filter(x=>x.i&&x.o&&(!F.t||x.t===F.t)&&(!F.reg||F.reg.includes(x.reg))&&(!F.g||F.g.includes(x.g))&&(!F.from||(x.o>=F.from&&x.o<=F.to))&&(!F.w||F.w.includes(nrm(x.w)))&&(!F.c||F.c.some(c=>nrm(x.c).includes(c))));
+ if(!F.open&&wd(t,'resolver|resolucion|resuelve|resuelven|tarda en resolver|tardan en resolver')&&wd(t,'dias|tiempo|tarda|tardan|demora|resolver|resolucion|resuelve|duracion|promedio')){const evs=SEG.filter(x=>x.i&&x.o&&(!F.t||x.t===F.t)&&(!F.reg||F.reg.includes(x.reg))&&(!F.g||F.g.includes(x.g))&&(!F.from||(x.o>=F.from&&x.o<=F.to))&&(!F.w||F.w.includes(nrm(x.w)))&&(!F.c||F.c.some(c=>nrm(x.c).includes(c))));
   if(!evs.length)return `No hay unidades ya resueltas para <b>${E(ctx(F))}</b>.`;
   const by=rank(evs,x=>x.w).sort((a,b)=>b.avg-a.avg),all=sum(evs,x=>dd(x.i,x.o))/evs.length;
   return `Promedio de días de resolución (ingreso a salida) en <b>${E(ctx(F))}</b>: <b>${fm(all,1)} días</b> sobre ${evs.length} unidades resueltas.<div style="margin-top:6px">${bars(by.map(r=>({k:r.k,v:r.avg,l:fm(r.avg,1)+' d · '+r.c+' u.'})))}</div><div class="nt">Se cuenta por fecha de salida dentro del periodo.</div>`}
- let subj=null,kf=null;
- if(wd(t,'region(es)?'))[subj,kf]=['región',x=>x.reg];
- else if(wd(t,'marcas?|sub ?motor'))[subj,kf]=['marca sub motor',x=>x.g];
- else if(wd(t,'causas?|fallas?|motivos?|danos?'))[subj,kf]=['causa',x=>x.c];
- else if(wd(t,'responsables?|area(s)?'))[subj,kf]=['responsable',x=>x.w];
- else if(wd(t,'estatus|estado|taller(es)?'))[subj,kf]=['estatus',x=>x.p||x.s];
- else if(wd(t,'sucursal(es)?|plaza(s)?|lugar(es)?|ciudad(es)?'))[subj,kf]=['lugar',x=>x.l];
- else if(wd(t,'moviles?|unidad(es)?|economicos?|equipos?|tractos?|remolques?|dollys?|camion(es)?|mas veces|veces')&&(rankW||wd(t,'veces|repet|reincid|recurrent')))[subj,kf]=['unidad',x=>x.e];
- if(subj&&(rankW||wd(t,'veces|cuanto|cuantas|cuantos'))&&!wd(t,'cuantas unidades|cuantos economicos|cuantos moviles')){const evs=sel(F),m=pickMetric(t),rows=rank(evs,kf,m).sort((a,b)=>asc?a.v-b.v:b.v-a.v||b.d-a.d);
-  if(!rows.length)return `No encontré inmovilizaciones para <b>${E(ctx(F))}</b>.`;
-  const top=rows[0],tie=rows.filter(r=>r.v===top.v).length-1;return `${asc?'Menos':'Más'} ${m==='d'?'días acumulados':'inmovilizaciones'} por <b>${subj}</b> en <b>${E(ctx(F))}</b>: <b>${E(top.k)}</b> con ${m==='d'?fm(top.d)+' días':top.c+' inmovilizaciones'}${m==='d'?' ('+top.c+' ev.)':' ('+fm(top.d)+' días acumulados)'}${tie?` — empata con ${tie} más`:''}.<div style="margin-top:6px">${bars(rows.slice(0,6).map(r=>({k:r.k,v:r.v,l:m==='d'?fm(r.d)+' d':r.c+' · '+fm(r.avg)+' d prom.'})))}</div><div class="nt">Cada ingreso al Seguimiento cuenta como una inmovilización${F.lab?' (por fecha de ingreso)':''}.</div>`}
- if(wd(t,'cuantas?|cuantos?|total|numero|hay|tenemos')||F.open){const evs=sel(F);if(!evs.length)return `No encontré unidades para <b>${E(ctx(F))}</b>.`;const us=new Set(evs.map(x=>x.e)),ab=evs.filter(x=>!x.o);
-  const g=F.reg?rank(evs,x=>x.t):rank(evs,x=>x.reg);g.sort((a,b)=>b.c-a.c);
-  return `<b>${evs.length}</b> ${F.open?'unidades detenidas hoy':'inmovilizaciones'} ${F.open&&ctx(F)==='abiertas hoy'?'en total':'en <b>'+E(ctx(F))+'</b>'}${F.open?'':` (${us.size} unidades distintas, ${ab.length} siguen abiertas)`}; promedio ${fm(sum(evs,dur)/evs.length,1)} días.<div style="margin-top:6px">${bars(g.map(r=>({k:r.k,v:r.c,l:r.c+' · '+fm(r.avg)+' d prom.'})))}</div>${F.open?'<span class="go" onclick="pqGo(5)">Ver Detenidas hoy →</span>':''}`}
+ const A=analytic(t,F);if(A)return A;
  const nav=[[/up ?time|disponibilidad/,1,'📊 Resumen y Up Time'],[/kardex/,8,'📇 Kardex'],[/hallazg/,10,'💡 Hallazgos'],[/recurrent|reincid/,7,'♻️ Recurrentes y alertas'],[/comportamiento|tendencia|entran|salen/,4,'📈 Comportamiento']].find(a=>a[0].test(t));
  if(nav)return `Eso lo puedes ver completo en <b>${nav[2]}</b>. Si me das una pregunta más concreta (por ejemplo “cuántas unidades detenidas hay en Centro”) te la respondo aquí.<br><span class="go" onclick="pqGo(${nav[1]})">Abrir ${nav[2]} →</span>`;
  return `Eso no lo encuentro en la información que vive en la plataforma (unidades inmovilizadas, flota, Up Time, marcas, regiones, fallas, responsables y comentarios del Seguimiento), así que prefiero no inventarte una respuesta. 🙂<div class="nt">Prueba, por ejemplo: “¿Qué móvil se ha inmovilizado más veces en 2026?” · “¿Qué refacción causó más inmovilizaciones en marzo 2026?” · “¿Cuántas unidades detenidas hay en Centro?”</div>`}
