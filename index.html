@@ -404,6 +404,21 @@ body.locked #pqn,body.locked #pqp{display:none!important}
 #pqp form button{background:#0a4dff;color:#fff;border:0;border-radius:12px;padding:0 14px;font-weight:700;cursor:pointer}
 .pqdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#94a3b8;margin:0 1px;animation:pqd 1s infinite}.pqdot:nth-child(2){animation-delay:.2s}.pqdot:nth-child(3){animation-delay:.4s}
 @keyframes pqd{0%,80%,100%{opacity:.2}40%{opacity:1}}
+#pdn{position:fixed;right:96px;bottom:20px;width:58px;height:58px;z-index:9000;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 6px 14px rgba(255,138,0,.45));animation:pqf 3.6s ease-in-out infinite .6s}
+#pdn.drag{cursor:grabbing;animation:none;transform:scale(1.08)}#pdn.open{animation:none}#pdn svg{width:100%;height:100%;display:block;pointer-events:none}
+#pdn .tip{position:absolute;left:50%;transform:translateX(-50%);top:-24px;background:#ff8a00;color:#fff;font:700 11px system-ui;padding:3px 8px;border-radius:10px;white-space:nowrap;pointer-events:none}
+#pdn.open .tip,#pdn.drag .tip,#pdn.seen .tip{display:none}
+body.locked #pdn,body.locked #pdp{display:none!important}
+#pdp{position:fixed;z-index:9001;width:min(350px,94vw);background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.35);display:none;overflow:hidden;font:14px system-ui}
+#pdp.on{display:block}
+#pdp .hd{background:linear-gradient(135deg,#ff8a00,#ffb84d);color:#fff;padding:10px 12px;display:flex;align-items:center;gap:10px}#pdp .hd b{font-size:15px}#pdp .hd small{display:block;opacity:.92;font-size:11px}
+#pdp .hd button{margin-left:auto;background:rgba(255,255,255,.25);color:#fff;border:0;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:15px}
+#pdp .bd{padding:14px}#pdp .rw{display:grid;grid-template-columns:1fr 1fr;gap:10px}#pdp label{font-size:12px;font-weight:700;display:flex;flex-direction:column;gap:4px}
+#pdp input[type=date]{border:1px solid var(--bd);border-radius:10px;padding:8px;background:var(--bg2);color:var(--tx);font:13px system-ui;min-width:0}
+#pdp .qk{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}#pdp .qk span{border:1px solid var(--bd);background:var(--card);border-radius:14px;padding:4px 9px;font-size:11.5px;cursor:pointer}#pdp .qk span:hover{border-color:#ff8a00;color:#ff8a00}
+#pdp .er{color:#e5484d;font-size:12px;min-height:16px}#pdp .ac{display:flex;gap:8px;margin-top:4px}
+#pdp .ac button{flex:1;border:0;border-radius:12px;padding:10px;font-weight:700;cursor:pointer;color:#fff;background:#ff8a00}#pdp .ac button+button{background:#0a4dff}
+#pdp .nt2{font-size:11px;opacity:.7;margin-top:10px;line-height:1.35}
 </style>
 <script>
 (function(){
@@ -698,13 +713,21 @@ function deckHTML(q,t,F,d){const nl=(t.match(/(\d{1,2})\s*(laminas|diapositivas|
 function deckAns(q,t,F){const d=deckData(q,t,F),k=deckHTML(q,t,F,d);if(k.n<=3)return `No encontré información suficiente para armar la presentación con <b>${E(ctx({...d.G,open:false}))}</b>. Prueba con otro periodo o con menos filtros.`;
  const id=window.__pqd.length;window.__pqd.push(()=>({html:deckHTML(q,t,F,deckData(q,t,F)).html,name:'Presentacion_Paquetexpress_'+ISO()+'.html'}));
  return `Listo 🎉 armé la presentación <b>“${E(k.title)}”</b> con <b>${k.n} láminas</b> enfocadas en lo que pediste (${E(d.hoy?'detenidas al corte':d.G.lab||'todo el histórico')}${d.auto?'; sin periodo indicado tomé los últimos 12 meses':''}).<div class="nt"><b>Cómo interpreté tu petición:</b> ${k.interp.map(E).join(' | ')}.</div><div class="nt"><b>Contenido:</b> portada · ${k.tit.map(E).join(' · ')} · cierre.</div><div class="nt">Controles: flechas ← → · F pantalla completa · 🖨 para guardar en PDF.</div><span class="go" onclick="pqDeck(${id},'open')">▶ Ver presentación</span> <span class="go" onclick="pqDeck(${id},'dl')">⬇ Descargar HTML</span>`}
+const DKPLAN=['resumen','uptime','dist','causas','evol','respRes','refac','stock','recur','retire','abiertas','fcDetail'];
+const fD=s=>{const m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);return m?(+m[3])+' '+MES[+m[2]-1].slice(0,3).toLowerCase()+' '+m[1]:s};
+function genDeck(from,to){const F={from,to,lab:fD(from)+' al '+fD(to)},d=deckData('Inmovilizados Flota Logística','',F),r=deckSlides('Inmovilizados Flota Logística','',F,d,DKPLAN),{title,per}=r;
+ const ft=r.ft,all=r.sl,uh=[...new Set(r.hz)],tit=r.tit.slice();
+ const cv=`<section class="sl cv"><svg class="sw" viewBox="0 0 620 240" fill="none" stroke="#fff" stroke-linecap="round" opacity=".16"><path d="M10 30v130q0 40 40 40h560" stroke-width="22"/><path d="M60 62v80q0 30 30 30h520" stroke-width="12"/></svg><img class="lg" src="${LOGO}" alt="Paquetexpress"><div class="dg">DIRECCIÓN GENERAL DE OPERACIONES Y LOGÍSTICA</div><div class="ma">MANTENIMIENTO DE ACTIVOS</div><div class="ln"></div><div class="ti" style="font-size:50px">${E(title)}</div><div class="su">Resumen general · Del ${E(fD(from))} al ${E(fD(to))} · Información al corte ${E(S.corte)}</div></section>`;
+ const cl=uh.length?`<section class="sl"><span class="tag">CONCLUSIONES</span><h2>Hallazgos y recomendaciones</h2><p class="sub">Periodo: ${E(fD(from))} al ${E(fD(to))}</p><ul class="f">${uh.slice(0,7).map(x=>`<li>${x}</li>`).join('')}</ul>${ft()}</section>`:'';
+ const end=`<section class="sl cv" style="align-items:center;text-align:center;padding:60px"><img class="lg" src="${LOGO}" alt=""><div class="ti" style="margin-top:34px;max-width:none;font-size:56px">GRACIAS</div><div class="dg" style="margin-top:6px">DIRECCIÓN GENERAL DE OPERACIONES Y LOGÍSTICA</div><div class="ma" style="font-size:26px">MANTENIMIENTO DE ACTIVOS</div><div class="su">Generada desde la plataforma por ${E(WHO)}</div></section>`;
+ const fin=[cv,...all,cl,end].filter(Boolean);
+ return{n:fin.length,html:`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${E(title)} · Paquetexpress</title><style>${DECKCSS}</style></head><body><div class="pb" id="pb"></div><div id="st">${fin.join('')}</div><div id="pg"></div><div class="ctl"><button id="pv" title="Anterior">◀</button><button id="nx" title="Siguiente">▶</button><button id="fs" title="Pantalla completa (F)">⛶</button><button id="pr" title="Imprimir / PDF">🖨</button></div><script>${DECKJS}<\/script></body></html>`}}
 function unitAns(id){const ev=SEG.filter(x=>String(x.e).toLowerCase()===id.toLowerCase()).sort((a,b)=>(b.i||'').localeCompare(a.i||''));if(!ev.length)return null;const o=ev.filter(x=>!x.o),f=FLM&&FLM.get?FLM.get(N(ev[0].e)):null;
  return `<b>${E(ev[0].e)}</b> (${E(ev[0].t)} · ${E(ev[0].g||'')} · ${E(ev[0].reg)}): <b>${ev.length}</b> inmovilizaciones registradas, ${fm(sum(ev,dur))} días acumulados. ${o.length?`<b>Hoy está detenida</b> desde ${E(o[0].i)} (${dur(o[0])} d) · ${E(o[0].p||o[0].s)} · resp. ${E(o[0].w)}.`:'Hoy no tiene inmovilización abierta.'}<div style="margin-top:6px">${ev.slice(0,4).map(x=>`<div class="r" style="grid-template-columns:auto 1fr"><b>${E(x.i)}</b><span>${E(x.c)} · ${dur(x)} d${x.o?'':' (abierta)'} · ${E(x.w)}</span></div>`).join('')}</div>${o.length&&o[0].n?`<div class="nt">Último comentario: ${E(String(o[0].n).split(/\r?\n/)[0].slice(0,160))}</div>`:''}`}
 function ans(q){const t=nrm(q).replace(/inmobil/g,'inmovil').replace(/refaccion(es)?/g,m=>m);const F=parseF(t);
  if(!t.trim())return 'Escríbeme tu pregunta 🙂';
  if(wd(t,'hola|buenas|buenos dias|buenas tardes|hey')&&t.split(' ').length<4)return `¡Hola, ${E(WHO)}! 😊 Pregúntame sobre las unidades detenidas, Up Time, regiones, marcas, fallas, refacciones o una unidad en particular.`;
  if(wd(t,'ayuda|que puedes|que sabes|que haces|como funcionas'))return HELP();
- if(wd(t,'presentacion(es)?|presentar|diapositivas?|slides?|ppt|pptx|deck'))return deckAns(q,t,F);
  const idm=t.match(/\b(m\d{5,7}|\d{3,6})\b/);if(idm){const u=unitAns(idm[1]);if(u)return u}
  if(wd(t,'renovacion|renovar|vender|venta|vendidas?|dar de baja|baja|bajas|sacar(los|las)? a la venta|desinvertir|reemplaz[a-z]*|sustituir|sustitucion|obsolet[a-z]*|candidat[a-z]*|desechar|descartar|retirar|salir de la flota')&&wd(t,'tractos?|unidad(es)?|movil(es)?|remolques?|dollys?|equipos?|flota|economicos?|camion(es)?'))return retireAns(t,F);
  if(isFut(t,F))return forecastAns(t,F);
@@ -726,14 +749,14 @@ function ans(q){const t=nrm(q).replace(/inmobil/g,'inmovil').replace(/refaccion(
  const nav=[[/up ?time|disponibilidad/,1,'📊 Resumen y Up Time'],[/kardex/,8,'📇 Kardex'],[/hallazg/,10,'💡 Hallazgos'],[/recurrent|reincid/,7,'♻️ Recurrentes y alertas'],[/comportamiento|tendencia|entran|salen/,4,'📈 Comportamiento']].find(a=>a[0].test(t));
  if(nav)return `Eso lo puedes ver completo en <b>${nav[2]}</b>. Si me das una pregunta más concreta (por ejemplo “cuántas unidades detenidas hay en Centro”) te la respondo aquí.<br><span class="go" onclick="pqGo(${nav[1]})">Abrir ${nav[2]} →</span>`;
  return `Eso no lo encuentro en la información que vive en la plataforma (unidades inmovilizadas, flota, Up Time, marcas, regiones, fallas, responsables y comentarios del Seguimiento), así que prefiero no inventarte una respuesta. 🙂<div class="nt">Prueba, por ejemplo: “¿Qué móvil se ha inmovilizado más veces en 2026?” · “¿Qué refacción causó más inmovilizaciones en marzo 2026?” · “¿Cuántas unidades detenidas hay en Centro?”</div>`}
-function HELP(){return `Puedo responder con lo que vive en la plataforma:<br>• Unidades que más se han inmovilizado (por año, mes, región, marca)<br>• Refacciones que más detienen unidades y sus días promedio<br>• Cuántas unidades detenidas hay hoy (por región, tipo, marca)<br>• Días promedio de resolución y días acumulados por responsable<br>• Historial de una unidad (escribe su número, ej. M005529)<br>• <b>Presentaciones HTML</b> ejecutivas descargables (“hazme una presentación de…”)<br>• <b>Análisis</b> y recomendaciones de stock de refacciones<br>• <b>Reportes en Excel</b> descargables: “dame un Excel de unidades detenidas por falta de refacciones de enero 2026 a septiembre 2026”`}
+function HELP(){return `Puedo responder con lo que vive en la plataforma:<br>• Unidades que más se han inmovilizado (por año, mes, región, marca)<br>• Refacciones que más detienen unidades y sus días promedio<br>• Cuántas unidades detenidas hay hoy (por región, tipo, marca)<br>• Días promedio de resolución y días acumulados por responsable<br>• Historial de una unidad (escribe su número, ej. M005529)<br>• <b>Análisis</b> y recomendaciones de stock de refacciones<br>• <b>Reportes en Excel</b> descargables: “dame un Excel de unidades detenidas por falta de refacciones de enero 2026 a septiembre 2026”`}
 window.pqGo=function(i){S.tab=i;R();scrollTo(0,0)};
 // ---- UI
 const b=document.createElement('div');b.id='pqn';b.innerHTML=FACE+'<div class="tip">Paquetín</div>';
 const p=document.createElement('div');p.id='pqp';p.innerHTML=`<div class="hd">${FACE}<div><b>Paquetín</b><small>Asistente virtual · responde con la información de la plataforma</small></div><button type="button" id="pqx" title="Cerrar">✕</button></div><div id="pqm"></div><div class="pqch" id="pqc"></div><form id="pqf" autocomplete="off"><input id="pqi" placeholder="Escribe tu pregunta…" maxlength="300"><button>Enviar</button></form>`;
 document.body.appendChild(b);document.body.appendChild(p);
 const M=p.querySelector('#pqm'),I=p.querySelector('#pqi'),C=p.querySelector('#pqc');let wh=null,drag=0;
-const SUG=['¿Qué móvil se ha inmovilizado más veces en 2026?','¿Qué refacción causó más inmovilizaciones en marzo 2026?','¿Cuántas unidades detenidas hay hoy por región?','¿Qué marca tiene más días acumulados?','¿Qué refacciones me recomiendas reforzar en stock en 2026?','Dame un Excel de las unidades detenidas por falta de refacciones de enero 2026 a septiembre 2026','Hazme una presentación de las unidades detenidas por falta de refacciones de enero a septiembre 2026'];
+const SUG=['¿Qué móvil se ha inmovilizado más veces en 2026?','¿Qué refacción causó más inmovilizaciones en marzo 2026?','¿Cuántas unidades detenidas hay hoy por región?','¿Qué marca tiene más días acumulados?','¿Qué refacciones me recomiendas reforzar en stock en 2026?','Dame un Excel de las unidades detenidas por falta de refacciones de enero 2026 a septiembre 2026'];
 function add1(h,c){const d=document.createElement('div');d.className='pqb '+c;d.innerHTML=h;M.appendChild(d);M.scrollTop=M.scrollHeight;return d}
 function place(){const r=b.getBoundingClientRect(),w=p.offsetWidth||390,h=p.offsetHeight||520;let l=Math.min(Math.max(8,r.right-w),innerWidth-w-8),tp=r.top>innerHeight/2?r.top-h-10:r.bottom+10;tp=Math.min(Math.max(8,tp),innerHeight-h-8);p.style.left=l+'px';p.style.top=tp+'px'}
 function open(){if(wh!==WHO){M.innerHTML='';wh=WHO;add1(`¡Hola, <b>${E(WHO)}</b>! 😊<br>¿Qué quieres preguntarle hoy a <b>Paquetín</b>?`,'bot');C.innerHTML=SUG.map(s=>`<span>${E(s)}</span>`).join('')}
@@ -749,6 +772,32 @@ b.addEventListener('pointermove',e=>{if(!b.hasPointerCapture(e.pointerId))return
 b.addEventListener('pointerup',e=>{b.releasePointerCapture(e.pointerId);b.classList.remove('drag');if(drag){try{sessionStorage.setItem('pqpos',JSON.stringify([b.style.left,b.style.top]))}catch(_){}}else{p.classList.contains('on')?close():open()}drag=0});
 try{const s=JSON.parse(sessionStorage.getItem('pqpos')||'null');if(s){b.style.right='auto';b.style.bottom='auto';b.style.left=s[0];b.style.top=s[1]}}catch(_){}
 addEventListener('resize',()=>{if(p.classList.contains('on'))place()});
+
+// ---- Presentación general (icono flotante)
+const PIC=`<svg viewBox="0 0 64 64" aria-label="Presentación"><defs><linearGradient id="pdg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb84d"/><stop offset="1" stop-color="#ff8a00"/></linearGradient></defs><rect x="3" y="3" width="58" height="58" rx="16" fill="url(#pdg)"/><rect x="11" y="14" width="42" height="29" rx="4" fill="#fff"/><rect x="11" y="14" width="42" height="6" rx="3" fill="#0a4dff"/><rect x="16" y="32" width="5" height="7" rx="1.5" fill="#0a4dff"/><rect x="24" y="27" width="5" height="12" rx="1.5" fill="#4f8cff"/><rect x="32" y="30" width="5" height="9" rx="1.5" fill="#0a4dff"/><rect x="40" y="24" width="5" height="15" rx="1.5" fill="#ff8a00"/><path d="M26 50h12M32 43v7" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></svg>`;
+const pb=document.createElement('div');pb.id='pdn';pb.innerHTML=PIC+'<div class="tip">Presentación</div>';
+const pp=document.createElement('div');pp.id='pdp';
+pp.innerHTML=`<div class="hd"><div style="font-size:26px">📽️</div><div><b>Presentación general</b><small>Elige el periodo y la armo con la información de la plataforma</small></div><button type="button" id="pdx" title="Cerrar">✕</button></div><div class="bd"><div class="rw"><label>Desde<input type="date" id="pdf"></label><label>Hasta<input type="date" id="pdt"></label></div><div class="qk"><span data-q="ytd">Año en curso</span><span data-q="12">Últimos 12 meses</span><span data-q="6">Últimos 6 meses</span><span data-q="all">Todo el histórico</span></div><div class="er" id="pde"></div><div class="ac"><button type="button" id="pdv">▶ Ver presentación</button><button type="button" id="pdd">⬇ Descargar HTML</button></div><div class="nt2">Siempre es la misma presentación (portada, resumen, Up Time, regiones, causas, responsables, refacciones, recurrentes, candidatas a venta, situación actual y proyección); solo cambian los datos del periodo.</div></div>`;
+document.body.appendChild(pb);document.body.appendChild(pp);
+const dF=pp.querySelector('#pdf'),dT=pp.querySelector('#pdt'),dE=pp.querySelector('#pde');let pdrag=0;
+function pdInit(){const mn=SEG.reduce((a,x)=>x.i&&x.i<a?x.i:a,'9999-12-31');dF.min=dT.min=mn;dF.max=dT.max=S.corte;if(!dF.value||!dT.value)pdQ('ytd')}
+function pdQ(k){const cy=+S.corte.slice(0,4),cm=+S.corte.slice(5,7),mn=dF.min||'2000-01-01';let f;if(k==='ytd')f=cy+'-01-01';else if(k==='all')f=mn;else{const [y,m]=ymAdd(cy,cm,-(+k-1));f=ymd(y,m,1)}dF.value=f<mn?mn:f;dT.value=S.corte}
+function pdPlace(){const r=pb.getBoundingClientRect(),w=pp.offsetWidth||350,h=pp.offsetHeight||330;let l=Math.min(Math.max(8,r.right-w),innerWidth-w-8),tp=r.top>innerHeight/2?r.top-h-10:r.bottom+10;tp=Math.min(Math.max(8,tp),innerHeight-h-8);pp.style.left=l+'px';pp.style.top=tp+'px'}
+function pdOpen(){pdInit();pp.classList.add('on');pb.classList.add('open','seen');pdPlace();const c=document.getElementById('pqp');if(c&&c.classList.contains('on')){c.classList.remove('on');document.getElementById('pqn').classList.remove('open')}}
+function pdClose(){pp.classList.remove('on');pb.classList.remove('open')}
+pp.querySelector('#pdx').onclick=pdClose;
+pp.querySelector('.qk').onclick=e=>{const q=e.target.dataset.q;if(q){pdQ(q);dE.textContent=''}};
+function pdGo(m){dE.textContent='';const f=dF.value,t2=dT.value;if(!f||!t2){dE.textContent='Elige las dos fechas: Desde y Hasta.';return}if(f>t2){dE.textContent='La fecha “Desde” no puede ser posterior a “Hasta”.';return}
+ const id=window.__pqd.length;window.__pqd.push(()=>({html:genDeck(f,t2).html,name:'Presentacion_Inmovilizados_'+f+'_a_'+t2+'.html'}));pqDeck(id,m)}
+pp.querySelector('#pdv').onclick=()=>pdGo('open');pp.querySelector('#pdd').onclick=()=>pdGo('dl');
+let psx=0,psy=0,pox=0,poy=0;
+pb.addEventListener('pointerdown',e=>{pb.setPointerCapture(e.pointerId);psx=e.clientX;psy=e.clientY;const r=pb.getBoundingClientRect();pox=r.left;poy=r.top;pdrag=0;e.preventDefault()});
+pb.addEventListener('pointermove',e=>{if(!pb.hasPointerCapture(e.pointerId))return;const dx=e.clientX-psx,dy=e.clientY-psy;if(!pdrag&&Math.hypot(dx,dy)<6)return;pdrag=1;pb.classList.add('drag');pb.style.right='auto';pb.style.bottom='auto';pb.style.left=Math.min(Math.max(0,pox+dx),innerWidth-pb.offsetWidth)+'px';pb.style.top=Math.min(Math.max(0,poy+dy),innerHeight-pb.offsetHeight)+'px';if(pp.classList.contains('on'))pdPlace()});
+pb.addEventListener('pointerup',e=>{pb.releasePointerCapture(e.pointerId);pb.classList.remove('drag');if(pdrag){try{sessionStorage.setItem('pdpos',JSON.stringify([pb.style.left,pb.style.top]))}catch(_){}}else{pp.classList.contains('on')?pdClose():pdOpen()}pdrag=0});
+try{const s=JSON.parse(sessionStorage.getItem('pdpos')||'null');if(s){pb.style.right='auto';pb.style.bottom='auto';pb.style.left=s[0];pb.style.top=s[1]}}catch(_){}
+addEventListener('resize',()=>{if(pp.classList.contains('on'))pdPlace()});
+// al abrir Paquetín se cierra el panel de presentación
+b.addEventListener('pointerup',()=>{setTimeout(()=>{if(p.classList.contains('on'))pdClose()},0)});
 window.pqAnswer=ans;
 })();
 </script>
