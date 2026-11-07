@@ -1135,27 +1135,33 @@ window.pqAnswer=ans;window.__pqdbg={qa2,parseF,nrm};
 (function(){
 const N=v=>String(v==null?'':v).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\p{L}\p{N}\s\/\-]/gu,' ').replace(/\s+/g,' ').trim().toLowerCase();
 const FIELDS=[['reg',x=>x.reg],['c',x=>x.c],['s',x=>x.s],['eg',x=>x.eg],['g',x=>x.g],['m',x=>x.m],['k',x=>x.k],['w',x=>x.w],['l',x=>x.l],['t',x=>x.t],['rng',x=>x.i&&!x.o?rng(days(x)):''],['mes',x=>(x.i||'').slice(0,7)],['año',x=>(x.i||'').slice(0,4)],['resp',x=>typeof RESPN==='function'?RESPN(x.w||''):'']];
-const poolsNow=()=>{const o=[];try{o.push(['open',det()])}catch(_){}try{o.push(['per',SEG.filter(x=>x.i&&x.i>=S.from&&x.i<=S.to)])}catch(_){}try{o.push(['all',SEG])}catch(_){}return o};
+const poolsNow=()=>{const o=[];let op=[];try{op=det();o.push(['open',op]);o.push(['opentr',op.filter(x=>x.tr)])}catch(_){}
+ try{const P=SEG.filter(x=>x.i&&x.i>=S.from&&x.i<=S.to),rg=S.reg&&S.reg.size?(a=>a.filter(x=>S.reg.has(x.reg))):(a=>a),tp=S.tipo&&S.tipo!=='Todos'?(a=>a.filter(x=>x.t===S.tipo)):(a=>a),tg=(typeof TG!=='undefined'&&TG&&!S.hmAll)?(a=>a.filter(x=>TG.has(x.g))):(a=>a);
+  o.push(['pertg',tg(rg(tp(P)))]);o.push(['perrg',rg(tp(P))]);o.push(['per',P]);o.push(['all',SEG]);o.push(['allrg',rg(SEG)])}catch(_){}return o};
 const clean=t=>t.replace(/\s*[·(]\s*[\d.,]+\s*(%|unidades?)?\s*\)?\s*$/,'').replace(/\s*\(.*\)\s*$/,'').replace(/^[^\p{L}\p{N}]+/u,'').trim();
 const num=t=>{const m=String(t).replace(/[,\s]/g,'').match(/^(\d+)$/);return m?+m[1]:null};
-function byLabel(label,n,pools){const L=N(label);if(!L)return null;
- for(const [pn,arr] of pools){let best=null;for(const [fn,fv] of FIELDS){const a=arr.filter(x=>N(fv(x))===L);if(!a.length)continue;if(n==null||a.length===n){best={arr:a,f:fn};break}}if(best)return best}return null}
-function kpiRule(l,pools){l=N(l);const op=pools[0]&&pools[0][0]==='open'?pools[0][1]:[];let f=null;
- let m=l.match(/mas de (\d+) d/);if(m)f=x=>days(x)>+m[1];
- else if(/tractos? (detenid|fuera|inmoviliz)/.test(l))f=x=>x.tr;
- else if(/(unidades? )?(detenid|abiert|fuera de operaci|inmovilizad)/.test(l)&&!/promedio|dias/.test(l))f=x=>true;
- if(!f)return null;return {arr:op.filter(f),f:'kpi'}}
-const ok=(r,n)=>r&&r.arr.length&&(n==null||r.arr.length===n);
+function byLabel(label,n,pools){const cands=[...new Set([label,label.replace(/\s*[·]\s*[\d.,]+\s*(%|unidades?)?\s*$/,'').trim(),clean(label)])].filter(Boolean);for(const c of cands){const r=byLabel1(c,n,pools);if(r)return r}return null}
+function byLabel1(label,n,pools){const L=N(label);if(!L)return null;
+ for(const [pn,arr] of pools){let best=null;for(const [fn,fv] of FIELDS){const a=arr.filter(x=>N(fv(x))===L);if(!a.length)continue;if(n==null||a.length===n||(pn.startsWith('open')&&a.reduce((s,x)=>s+days(x),0)===n)){best={arr:a,f:fn};break}}if(best)return best}return null}
+function kpiRule(l,pools){l=N(l).replace(/-/g,' ');const op=pools[0]&&pools[0][0]==='open'?pools[0][1]:[];let f=null,arr=null;const per=SEG.filter(x=>x.i&&x.i>=S.from&&x.i<=S.to&&(!S.hd||!S.hd.size||S.hd.has(eh(x))));
+ let m=l.match(/mas de (\d+) d/);
+ if(/^(entran|ingresos nuevos|dias unidad en el rango)/.test(l)||/ingresos nuevos|^entran/.test(l))arr=per.filter(x=>x.i>=S.from);
+ else if(/^salen/.test(l))arr=SEG.filter(x=>x.o&&!x.est&&x.o>=S.from&&x.o<=S.to);
+ else if(m)f=x=>days(x)>+m[1];
+ else if(/up time (de )?tractos|tractos? (detenid|fuera|inmoviliz)|dias detenidos tractos|^tractos$|^tractos detenidos/.test(l)||/tractos/.test(l)&&!/activos/.test(l))f=x=>x.tr;
+ else if(/up time|(unidades? )?(detenid|abiert|fuera de operaci|inmovilizad)|dias (unidad )?(acumulad|perdid|detenid)|dias promedio$|promedio detenida|pico de detenidas|dias promedio detenida/.test(l)&&!/resolucion|activos totales/.test(l))f=x=>true;
+ if(f)arr=op.filter(f);if(!arr||!arr.length)return null;return {arr,f:'kpi'}}
+const ok=(r,n)=>r&&r.arr.length&&(n==null||r.arr.length===n||r.arr.reduce((s,x)=>s+(x.o?dd(x.i,x.o):days(x)),0)===n);
 let MAP=new WeakMap();
 function mark(){const app=document.getElementById('app');if(!app)return;MAP=new WeakMap();const pools=poolsNow();if(!pools.length)return;
  const add=(el,title,r,seg)=>{MAP.set(el,{title,arr:r.arr});el.classList.add('dd');if(!el.title)el.title='Clic para ver las unidades'};
  app.querySelectorAll('.hb').forEach(row=>{if(row.onclick||row.closest('.tile'))return;const l=row.querySelector('.l,span');if(!l)return;const raw=l.textContent.trim(),b=row.querySelector('b'),bt=b?b.textContent.trim():'';let n=num(bt);const mm=raw.match(/[·(]\s*(\d+)\s*\)?\s*$/);if(n==null&&mm)n=+mm[1];
-  const r=byLabel(clean(raw),n,pools);if(ok(r,n)){const h=row.closest('.card');if(/up time/i.test(h&&h.querySelector('h3')?h.querySelector('h3').textContent:'')){const a=r.arr.filter(x=>x.tr);if(!a.length)return;add(row,clean(raw)+' · tractos',{arr:a})}else add(row,clean(raw),r)}});
- app.querySelectorAll('.kpi:not(.tile)').forEach(k=>{if(k.onclick)return;const b=k.querySelector('b'),sp=k.querySelector('span');if(!b||!sp)return;const n=num(b.textContent);if(n==null)return;const r=kpiRule(sp.textContent,pools);if(ok(r,n))add(k,sp.textContent.trim(),r)});
+  const hh=row.closest('.card'),ht=hh&&hh.querySelector('h3')?hh.querySelector('h3').textContent:'';if(/promedio/i.test(ht)&&/cerrad|reparaci/i.test(ht)){const pp=pools.filter(p=>/^per|^all/.test(p[0])).map(p=>[p[0],p[1].filter(x=>x.o)]);const rr=byLabel(raw,null,pp);if(rr&&rr.arr.length)add(row,raw.replace(/\s*·\s*[\d.,]+\s*$/,'')+' · cerradas',rr);return}const r=byLabel(raw,n,pools);if(ok(r,n)){const h=row.closest('.card');if(/up time/i.test(h&&h.querySelector('h3')?h.querySelector('h3').textContent:'')){const a=r.arr.filter(x=>x.tr);if(!a.length)return;add(row,raw.replace(/\s*·\s*[\d.,]+\s*$/,'')+' · tractos',{arr:a})}else add(row,raw.replace(/\s*·\s*[\d.,]+\s*$/,''),r)}});
+ app.querySelectorAll('.kpi:not(.tile)').forEach(k=>{if(k.onclick)return;const b=k.querySelector('b'),sp=k.querySelector('span');if(!b||!sp)return;const n=num(b.textContent);const r=kpiRule(sp.textContent,pools);if(r&&(ok(r,n)||num(b.textContent)==null||/%|d$/.test(b.textContent.trim())||/dias|promedio|pico|up time/.test(N(sp.textContent))))add(k,sp.textContent.trim(),r)});
  app.querySelectorAll('svg rect[fill] > title').forEach(t=>{const m=t.textContent.match(/^(\d{4}-\d{2}(?:-\d{2})?):\s*(\d+)\s+(entran|salen)/);if(!m)return;const rc=t.parentNode,n=+m[2];if(!n)return;const g=S.bg||1,d0=m[1].length===7?m[1]+'-01':m[1],d1=m[1].length===7?add2(d0,31):add2(d0,g-1),ent=m[3]==='entran';
   const a=SEG.filter(x=>(ent?x.i:(x.o&&!x.est?x.o:''))>=d0&&(ent?x.i:x.o)<=(m[1].length===7?m[1]+'-31':d1)&&(!S.hd||!S.hd.size||S.hd.has(eh(x))));if(a.length===n)add(rc,(ent?'Entran · ':'Salen · ')+m[1],{arr:a})});
  app.querySelectorAll('table tr').forEach(tr=>{if(tr.onclick||tr.querySelector('th')||tr.closest('.gt'))return;const cs=[...tr.children];if(cs.length<2)return;const raw=cs[0].textContent.trim();if(!raw)return;const ints=cs.slice(1).map(c=>num(c.textContent)).filter(v=>v!=null&&v>0);if(!ints.length)return;
-  for(const n of ints){const r=byLabel(clean(raw),n,pools);if(r&&r.arr.length===n){add(tr,clean(raw),r);return}}})}
+  for(const n of ints){const r=byLabel(raw,n,pools);if(r&&r.arr.length===n){add(tr,raw,r);return}}})}
 function add2(d,n){const t=new Date(d+'T12:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)}
 /* overlay */
 const css=document.createElement('style');css.textContent=`.dd{cursor:pointer!important;transition:background .15s,box-shadow .15s}.hb.dd:hover,.kpi.dd:hover,tr.dd:hover{background:rgba(47,107,255,.09)!important;box-shadow:0 0 0 1px rgba(47,107,255,.35)}.hb.dd{border-radius:8px}.hb.dd b::after,tr.dd td:last-child::after{content:" ›";color:var(--pr);opacity:.55}.hb.dd:hover b::after{opacity:1}.kpi.dd::after{content:"ver unidades ›";display:block;margin-top:4px;font-size:10.5px;color:var(--pr);opacity:.0;transition:.15s}.kpi.dd:hover::after{opacity:1}svg rect.dd:hover{filter:brightness(1.25);stroke:#fff;stroke-width:1}
