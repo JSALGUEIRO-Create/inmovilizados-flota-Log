@@ -1131,4 +1131,54 @@ window.f360=f360;
 window.pqAnswer=ans;window.__pqdbg={qa2,parseF,nrm};
 })();
 </script>
-</body></html>
+<script>/* ===== Todo clicable: desplegado de unidades ===== */
+(function(){
+const N=v=>String(v==null?'':v).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\p{L}\p{N}\s\/\-]/gu,' ').replace(/\s+/g,' ').trim().toLowerCase();
+const FIELDS=[['reg',x=>x.reg],['c',x=>x.c],['s',x=>x.s],['eg',x=>x.eg],['g',x=>x.g],['m',x=>x.m],['k',x=>x.k],['w',x=>x.w],['l',x=>x.l],['t',x=>x.t],['rng',x=>x.i&&!x.o?rng(days(x)):''],['mes',x=>(x.i||'').slice(0,7)],['año',x=>(x.i||'').slice(0,4)],['resp',x=>typeof RESPN==='function'?RESPN(x.w||''):'']];
+const poolsNow=()=>{const o=[];try{o.push(['open',det()])}catch(_){}try{o.push(['per',SEG.filter(x=>x.i&&x.i>=S.from&&x.i<=S.to)])}catch(_){}try{o.push(['all',SEG])}catch(_){}return o};
+const clean=t=>t.replace(/\s*[·(]\s*[\d.,]+\s*(%|unidades?)?\s*\)?\s*$/,'').replace(/\s*\(.*\)\s*$/,'').replace(/^[^\p{L}\p{N}]+/u,'').trim();
+const num=t=>{const m=String(t).replace(/[,\s]/g,'').match(/^(\d+)$/);return m?+m[1]:null};
+function byLabel(label,n,pools){const L=N(label);if(!L)return null;
+ for(const [pn,arr] of pools){let best=null;for(const [fn,fv] of FIELDS){const a=arr.filter(x=>N(fv(x))===L);if(!a.length)continue;if(n==null||a.length===n){best={arr:a,f:fn};break}}if(best)return best}return null}
+function kpiRule(l,pools){l=N(l);const op=pools[0]&&pools[0][0]==='open'?pools[0][1]:[];let f=null;
+ let m=l.match(/mas de (\d+) d/);if(m)f=x=>days(x)>+m[1];
+ else if(/tractos? (detenid|fuera|inmoviliz)/.test(l))f=x=>x.tr;
+ else if(/(unidades? )?(detenid|abiert|fuera de operaci|inmovilizad)/.test(l)&&!/promedio|dias/.test(l))f=x=>true;
+ if(!f)return null;return {arr:op.filter(f),f:'kpi'}}
+const ok=(r,n)=>r&&r.arr.length&&(n==null||r.arr.length===n);
+let MAP=new WeakMap();
+function mark(){const app=document.getElementById('app');if(!app)return;MAP=new WeakMap();const pools=poolsNow();if(!pools.length)return;
+ const add=(el,title,r,seg)=>{MAP.set(el,{title,arr:r.arr});el.classList.add('dd');if(!el.title)el.title='Clic para ver las unidades'};
+ app.querySelectorAll('.hb').forEach(row=>{if(row.onclick||row.closest('.tile'))return;const l=row.querySelector('.l,span');if(!l)return;const raw=l.textContent.trim(),b=row.querySelector('b'),bt=b?b.textContent.trim():'';let n=num(bt);const mm=raw.match(/[·(]\s*(\d+)\s*\)?\s*$/);if(n==null&&mm)n=+mm[1];
+  const r=byLabel(clean(raw),n,pools);if(ok(r,n)){const h=row.closest('.card');if(/up time/i.test(h&&h.querySelector('h3')?h.querySelector('h3').textContent:'')){const a=r.arr.filter(x=>x.tr);if(!a.length)return;add(row,clean(raw)+' · tractos',{arr:a})}else add(row,clean(raw),r)}});
+ app.querySelectorAll('.kpi:not(.tile)').forEach(k=>{if(k.onclick)return;const b=k.querySelector('b'),sp=k.querySelector('span');if(!b||!sp)return;const n=num(b.textContent);if(n==null)return;const r=kpiRule(sp.textContent,pools);if(ok(r,n))add(k,sp.textContent.trim(),r)});
+ app.querySelectorAll('svg rect[fill] > title').forEach(t=>{const m=t.textContent.match(/^(\d{4}-\d{2}(?:-\d{2})?):\s*(\d+)\s+(entran|salen)/);if(!m)return;const rc=t.parentNode,n=+m[2];if(!n)return;const g=S.bg||1,d0=m[1].length===7?m[1]+'-01':m[1],d1=m[1].length===7?add2(d0,31):add2(d0,g-1),ent=m[3]==='entran';
+  const a=SEG.filter(x=>(ent?x.i:(x.o&&!x.est?x.o:''))>=d0&&(ent?x.i:x.o)<=(m[1].length===7?m[1]+'-31':d1)&&(!S.hd||!S.hd.size||S.hd.has(eh(x))));if(a.length===n)add(rc,(ent?'Entran · ':'Salen · ')+m[1],{arr:a})});
+ app.querySelectorAll('table tr').forEach(tr=>{if(tr.onclick||tr.querySelector('th')||tr.closest('.gt'))return;const cs=[...tr.children];if(cs.length<2)return;const raw=cs[0].textContent.trim();if(!raw)return;const ints=cs.slice(1).map(c=>num(c.textContent)).filter(v=>v!=null&&v>0);if(!ints.length)return;
+  for(const n of ints){const r=byLabel(clean(raw),n,pools);if(r&&r.arr.length===n){add(tr,clean(raw),r);return}}})}
+function add2(d,n){const t=new Date(d+'T12:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)}
+/* overlay */
+const css=document.createElement('style');css.textContent=`.dd{cursor:pointer!important;transition:background .15s,box-shadow .15s}.hb.dd:hover,.kpi.dd:hover,tr.dd:hover{background:rgba(47,107,255,.09)!important;box-shadow:0 0 0 1px rgba(47,107,255,.35)}.hb.dd{border-radius:8px}.hb.dd b::after,tr.dd td:last-child::after{content:" ›";color:var(--pr);opacity:.55}.hb.dd:hover b::after{opacity:1}.kpi.dd::after{content:"ver unidades ›";display:block;margin-top:4px;font-size:10.5px;color:var(--pr);opacity:.0;transition:.15s}.kpi.dd:hover::after{opacity:1}svg rect.dd:hover{filter:brightness(1.25);stroke:#fff;stroke-width:1}
+#ov{z-index:160!important}#pqdr{position:fixed;inset:0;z-index:150;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(2,8,30,.6);backdrop-filter:blur(3px)}#pqdr.on{display:flex}
+#pqdr .bx{background:var(--card);color:var(--tx);border-radius:16px;width:min(1000px,100%);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 70px rgba(0,0,0,.5);overflow:hidden}
+#pqdr .hd{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--bd)}#pqdr .hd h3{margin:0;font-size:16px;flex:1}#pqdr .hd button{padding:5px 12px}
+#pqdr .sm{display:flex;flex-wrap:wrap;gap:8px;padding:10px 18px 0}#pqdr .sm span{background:var(--bg2);border-radius:999px;padding:4px 12px;font-size:12px}#pqdr .sm b{color:var(--pr)}
+#pqdr .tb{overflow:auto;padding:10px 18px 18px}#pqdr table{font-size:12.5px}#pqdr tr.c td:last-child::after{content:""}`;document.head.appendChild(css);
+const ov=document.createElement('div');ov.id='pqdr';ov.innerHTML='<div class="bx"><div class="hd"><h3 id="drt"></h3><button id="drx" title="Descargar lista en CSV (abre en Excel)">⬇ Excel</button><button id="drc">✕</button></div><div class="sm" id="drs"></div><div class="tb" id="drb"></div></div>';document.body.appendChild(ov);
+let CUR=null;const close=()=>ov.classList.remove('on');
+ov.addEventListener('click',e=>{if(e.target===ov)close()});document.getElementById('drc').onclick=close;
+addEventListener('keydown',e=>{if(e.key==='Escape'&&ov.classList.contains('on')&&!document.getElementById('ov').classList.contains('on'))close()});
+function show(title,arr){CUR={title,arr};const a=arr.slice().sort((x,y)=>(x.o?0:1)-(y.o?0:1)||days(y)-days(x)),ab=a.filter(x=>!x.o).length,ds=a.reduce((s,x)=>s+(x.o?dd(x.i,x.o):days(x)),0);
+ document.getElementById('drt').textContent=title+' · '+a.length+' '+(a.length===1?'unidad':'unidades');
+ document.getElementById('drs').innerHTML=`<span><b>${a.length}</b> eventos</span><span><b>${new Set(a.map(x=>x.e)).size}</b> económicos</span><span><b>${ab}</b> abiertos</span><span><b>${fmt(ds)}</b> días acumulados</span><span><b>${a.length?(ds/a.length).toFixed(1):0}</b> días promedio</span>`;
+ const row=x=>`<tr class="c" onclick="openEv(${SEG.indexOf(x)})"><td><b>${esc(x.e)}</b></td><td>${esc(x.t)}</td><td>${esc(x.reg)}</td><td>${esc(x.c)}</td><td>${esc(x.s)}</td><td>${x.i||''}</td><td>${x.o||'<span class="tag r">abierta</span>'}</td><td>${x.o?dd(x.i,x.o):days(x)}</td></tr>`;
+ document.getElementById('drb').innerHTML=`<p class="hint"><span>👆</span> Haz clic en una fila para ver el detalle de la unidad</p><table><tr>${['Económico','Tipo','Región','Categoría','Estatus','Ingreso','Salida','Días'].map(h=>`<th>${h}</th>`).join('')}</tr>${a.slice(0,500).map(row).join('')}</table>${a.length>500?'<p class="note">Se muestran las primeras 500; usa ⬇ Excel para la lista completa.</p>':''}`;ov.classList.add('on')}
+document.getElementById('drx').onclick=()=>{if(!CUR)return;const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',H=['Económico','Tipo','Región','Categoría','Estatus','Ingreso','Salida','Días','Responsable','Causa'];const rows=CUR.arr.map(x=>[x.e,x.t,x.reg,x.c,x.s,x.i,x.o||'abierta',x.o?dd(x.i,x.o):days(x),x.w,x.k].map(q).join(','));const b=new Blob(['﻿'+H.map(q).join(',')+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=(CUR.title.replace(/[^\w\-]+/g,'_')||'unidades')+'.csv';document.body.appendChild(a);a.click();a.remove()};
+document.addEventListener('click',e=>{const el=e.target.closest&&e.target.closest('.dd');if(!el||!MAP.has(el))return;const d=MAP.get(el);let arr=d.arr,t=d.title;
+ const seg=e.target.closest&&e.target.closest('.t i[title]');if(seg&&el.classList.contains('hb')){const cat=seg.title.split(':')[0],nn=num(seg.textContent);for(const [fn,fv] of FIELDS){const s=arr.filter(x=>N(fv(x))===N(cat));if(s.length&&(nn==null||s.length===nn)){arr=s;t=t+' · '+cat;break}}}
+ e.stopPropagation();show(t,arr)},true);
+const _R=window.R;window.R=function(){const r=_R.apply(this,arguments);try{mark()}catch(e){console.warn('dd',e)}return r};
+try{mark()}catch(_){}
+window.__ddmark=mark;
+})();
+</script></body></html>
