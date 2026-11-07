@@ -1187,4 +1187,121 @@ const _R=window.R;window.R=function(){const r=_R.apply(this,arguments);try{mark(
 try{mark()}catch(_){}
 window.__ddmark=mark;
 })();
+</script><script>/* ===== Portada = periódico con locutor ===== */
+(function(){
+const dAdd=(d,n)=>{const t=new Date(d+'T12:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)};
+const spId=e=>String(e).replace(/([A-Za-z]+)(\d+)/g,(m,a,b)=>a.split('').join(' ')+' '+b.split('').join(' '));
+const n1=v=>v.toFixed(1),pl=(n,a,b)=>n===1?a:b;
+const esN=n=>Math.round(n).toLocaleString('es-MX'),sN=n=>String(Math.round(n)),hd=d=>{try{return new Date(d+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})}catch(_){return d}};
+function build(){
+ const d=det(),dt=d.filter(x=>x.tr),at=actTr(),u=up(at.length,dt.length)||0,ds=sum(d,days),old=d.slice().sort((a,b)=>days(b)-days(a)),lib=relMeta(at.length,dt.length),c=u>=META?'#1e8e5a':u>=95?'#c77700':'#c4283a',
+ rows=regTable().filter(r=>r.a).sort((a,b)=>a.u-b.u),below=rows.filter(r=>r.u<META),o90=d.filter(x=>days(x)>90).length,
+ causes=Object.entries(group(d,x=>x.c||'Sin categoría')).map(([k,v])=>({k,v:v.length})).sort((a,b)=>b.v-a.v),
+ sts=Object.entries(group(d,x=>x.eg||'Sin estatus')).map(([k,v])=>({k,v:v.length})).sort((a,b)=>b.v-a.v),
+ w0=dAdd(S.corte,-7),ent=SEG.filter(x=>x.i&&x.i>w0&&x.i<=S.corte),sal=SEG.filter(x=>x.o&&!x.est&&x.o>w0&&x.o<=S.corte);
+ let rec=[];try{rec=recur().rec}catch(_){}
+ const hr=new Date().getHours(),sal0=hr<12?'Buenos días':hr<19?'Buenas tardes':'Buenas noches',fecha=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+ const worst=rows[0],best=rows[rows.length-1];
+ const N=[];
+ // 0 titular
+ const head=u>=META?`La flota de tractos cumple la meta: Up Time en ${n1(u)}%`:`Up Time de tractos en ${n1(u)}%: faltan ${n1(META-u)} puntos para la meta`;
+ N.push({k:'PORTADA · LO MÁS RELEVANTE',h:head,
+  show:`Hoy hay <b>${d.length}</b> ${pl(d.length,'unidad fuera','unidades fuera')} de operación, <b>${dt.length}</b> ${pl(dt.length,'es tracto','son tractos')}. La flota de tractos opera al <b style="color:${c}">${n1(u)}%</b> ${u>=META?`y <b>cumple</b> la meta de ${META}%`:`frente a la meta de ${META}%; para alcanzarla hay que liberar <b>${lib}</b> ${pl(lib,'tracto','tractos')}`}. Las detenidas acumulan <b>${esN(ds)}</b> días perdidos.`,
+  say:`${head.replace(/%/g,' por ciento').replace(/(\d)\.(\d)/g,'$1 punto $2')}. Hoy hay ${d.length} ${pl(d.length,'unidad fuera','unidades fuera')} de operación, y ${dt.length} ${pl(dt.length,'es tracto','son tractos')}. ${u>=META?`La flota de tractos cumple la meta de ${META} por ciento.`:`Para alcanzar la meta de ${META} por ciento hay que liberar ${lib} ${pl(lib,'tracto','tractos')}.`} Las unidades detenidas acumulan ${sN(ds)} días perdidos.`});
+ // 1 cifras
+ N.push({k:'CIFRAS DEL DÍA',h:'Los números que hay que tener a la mano',
+  show:'',say:`Las cifras del día. ${d.length} unidades detenidas, ${dt.length} tractos detenidos, ${sN(ds)} días unidad perdidos, y ${o90} ${pl(o90,'unidad lleva','unidades llevan')} más de noventa días detenidas.`});
+ // 2 regiones
+ N.push({k:'REGIONES',h:below.length?`${below.length} ${pl(below.length,'región por debajo','regiones por debajo')} de la meta`:'Todas las regiones cumplen la meta',
+  show:worst?`La región con menor Up Time es <b>${esc(worst.r)}</b> con ${n1(worst.u)}%${best&&best!==worst?`; la mejor, <b>${esc(best.r)}</b>, con ${n1(best.u)}%`:''}.`:'',
+  say:worst?`En regiones, ${below.length?`${below.length} ${pl(below.length,'se encuentra','se encuentran')} por debajo de la meta`:'todas cumplen la meta'}. La de menor Up Time es ${worst.r}, con ${n1(worst.u).replace('.',' punto ')} por ciento${worst.n?`, y necesita liberar ${relMeta(worst.a,worst.n)} ${pl(relMeta(worst.a,worst.n),'tracto','tractos')}`:''}. ${best&&best!==worst?`La mejor es ${best.r}, con ${n1(best.u).replace('.',' punto ')} por ciento.`:''}`:'Sin datos de regiones.'});
+ // 3 antiguas
+ const t3=old.slice(0,3);
+ N.push({k:'ATENCIÓN INMEDIATA',h:t3[0]?`${t3[0].e} suma ${days(t3[0])} días detenida`:'Sin unidades detenidas',
+  show:t3.length?`Las más antiguas: ${t3.map(x=>`<b>${esc(x.e)}</b> (${esc(x.reg)}, ${days(x)} d)`).join(' · ')}.`:'',
+  say:t3.length?`Atención inmediata. Las unidades más antiguas son: ${t3.map(x=>`${spId(x.e)}, de ${x.reg}, con ${days(x)} días`).join('; ')}.`:'No hay unidades detenidas.'});
+ // 4 causas
+ const c3=causes.slice(0,3);
+ N.push({k:'¿POR QUÉ SE DETIENEN?',h:c3[0]?`${c3[0].k}, la causa número uno`:'Sin causas',
+  show:c3.length?`${c3.map(x=>`<b>${esc(x.k)}</b> (${x.v})`).join(', ')}.${sts[0]?` Por estatus predomina <b>${esc(sts[0].k)}</b> con ${sts[0].v}.`:''}`:'',
+  say:c3.length?`¿Por qué se detienen? ${c3.map(x=>`${x.k}, ${x.v}`).join('; ')}.${sts[0]?` Por estatus, predomina ${sts[0].k}, con ${sts[0].v}.`:''}`:''});
+ // 5 movimiento
+ const net=ent.length-sal.length;
+ N.push({k:'MOVIMIENTO DE LA SEMANA',h:`${ent.length} ${pl(ent.length,'ingreso','ingresos')} y ${sal.length} ${pl(sal.length,'salida','salidas')} en 7 días`,
+  show:`En los últimos 7 días <b>entraron ${ent.length}</b> y <b>salieron ${sal.length}</b>: saldo ${net>0?'<b style="color:#c4283a">+'+net+'</b> (más detenidas)':net<0?'<b style="color:#1e8e5a">'+net+'</b> (se liberaron más de las que entraron)':'<b>0</b> (parejo)'}.`,
+  say:`Movimiento de la semana. En los últimos siete días entraron ${ent.length} ${pl(ent.length,'unidad','unidades')} y salieron ${sal.length}. ${net>0?`El saldo es de ${net} más detenidas.`:net<0?`Se liberaron ${-net} más de las que entraron.`:'El saldo es parejo.'}`});
+ // 6 reincidentes
+ const r1=rec[0];
+ N.push({k:'ALERTAS',h:rec.length?`${rec.length} ${pl(rec.length,'unidad reincidente','unidades reincidentes')} en el periodo`:'Sin reincidencias en el periodo',
+  show:rec.length&&r1?`Encabeza <b>${esc(r1.e)}</b> con ${r1.n} ingresos y ${sN(r1.d)} días acumulados.`:'No se detectan unidades con ingresos repetidos.',
+  say:rec.length&&r1?`En alertas, hay ${rec.length} ${pl(rec.length,'unidad reincidente','unidades reincidentes')} en el periodo analizado. Encabeza la lista ${spId(r1.e)}, con ${r1.n} ingresos y ${sN(r1.d)} días acumulados.`:'No se detectan unidades con ingresos repetidos en el periodo.'});
+ const intro=`${sal0}. Les habla su locutor de Paquetexpress, con la edición del ${fecha}. Información al corte del ${hd(S.corte)}. Estas son las noticias de la flota.`;
+ const outro='Y esas fueron las noticias de la flota. Paquetexpress, logística segura. Hasta la próxima edición.';
+ return {d,dt,u,c,rows,N,old,causes,ent,sal,ds,o90,fecha,intro,outro,lib};
+}
+let B=null;
+function T0n(){B=build();setTimeout(()=>{loadVoices();ui()},0);const {d,dt,u,c,rows,N,old,causes,ds,o90,fecha}=B;
+ const kd=(v,l,k)=>`<div class="card kpi"><b style="color:${k}">${v}</b><span>${l}</span></div>`;
+ const art=(i,inner)=>`<article class="na" id="np-n${i}"><div class="nk">${N[i].k}</div><h3 class="nh">${N[i].h}</h3>${N[i].show?`<p class="nb">${N[i].show}</p>`:''}${inner||''}</article>`;
+ const tick=[`UP TIME TRACTOS ${n1(u)}%`,`META ${META}%`,`${d.length} UNIDADES DETENIDAS`,`${dt.length} TRACTOS`,`${esN(ds)} DÍAS PERDIDOS`,`${o90} CON MÁS DE 90 DÍAS`,`CORTE ${S.corte}`].map(t=>`<span>◆ ${t}</span>`).join('');
+ return `<div class="np">
+ <div class="npm"><div class="npt"><span>${fecha.charAt(0).toUpperCase()+fecha.slice(1)}</span><span>Corte de datos ${S.corte}</span><span>Paquetexpress · Mantenimiento de Activos Logísticos</span></div>
+ <h1 class="npn" id="np-n-1">La Gaceta de la Flota</h1><div class="nps">Diario de unidades inmovilizadas · Edición ${S.corte.replace(/-/g,'')}</div></div>
+ <div class="nptk"><div class="tkin">${tick}${tick}</div></div>
+ <div class="npa" id="npa"><button class="npp" id="npp" onclick="npPlay()" title="Escuchar la edición con voz de locutor"><span id="npi">🔊</span><b id="npl">Escuchar la edición</b></button><button class="nps2" onclick="npStop()" title="Detener" id="nps2" style="display:none">⏹</button><div class="npg"><i id="npgi"></i></div><span id="npst" class="npsx">Voz de locutor · ${N.length} notas</span><label>Voz <select id="npv" onchange="npVoice(this.value)"></select></label><label>Velocidad <select id="npr" onchange="npRate(this.value)"><option value="0.88">Pausada</option><option value="0.98" selected>Normal</option><option value="1.1">Ágil</option></select></label></div>
+ <div class="npg1"><section class="npl" id="np-n0"><div class="nk">${N[0].k}</div><h2 class="nhx">${N[0].h}</h2><div class="npw"><div><p class="nbl">${N[0].show}</p></div><svg viewBox="0 0 120 120" width="150"><circle cx="60" cy="60" r="50" fill="none" stroke="#d8cfb8" stroke-width="12"/><circle cx="60" cy="60" r="50" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${3.1416*u} 999" transform="rotate(-90 60 60)"/><text x="60" y="62" text-anchor="middle" style="fill:#1b1b1b;font-size:22px;font-weight:800;font-family:Georgia,serif">${n1(u)}%</text><text x="60" y="77" text-anchor="middle" style="fill:#6b6350;font-size:7px;letter-spacing:1px">UP TIME TRACTOS</text></svg></div>
+ <figure class="npf"><img src="${IMG[2]}"><figcaption>Flota Paquetexpress en operación · foto de archivo</figcaption></figure></section>
+ <aside class="nsd" id="np-n1"><div class="nk">${N[1].k}</div><div class="grid g2" style="gap:10px">${kd(d.length,'unidades detenidas','#c4283a')}${kd(dt.length,'tractos detenidos','#c77700')}${kd(fmt(ds),'días-unidad perdidos','#1f4fa8')}${kd(o90,'con más de 90 días','#c4283a')}</div></aside></div>
+ <div class="npg3">
+ ${art(2,`<div class="npb">${rows.map(r=>{const k=r.u>=META?'#1e8e5a':r.u>=95?'#d98a00':'#c4283a',rl=relMeta(r.a,r.n);return `<div class="hb"><span class="l">${esc(r.r)}</span><div class="t" style="position:relative"><i style="width:${Math.max(3,(r.u-80)*5)}%;background:${k}"></i><s title="Meta ${META}%" style="position:absolute;left:${(META-80)*5}%;top:-3px;bottom:-3px;width:2px;background:#1b1b1b;opacity:.7"></s></div><b>${r.u.toFixed(1)}%${rl?`<small style="font-weight:500;opacity:.7"> · −${rl}</small>`:' ✓'}</b></div>`}).join('')}<p class="note">Meta ${META}% (línea). “−N” = tractos por liberar.</p></div>`)}
+ ${art(3,`<div class="npb">${tbl(['Económico','Región','Categoría','Días'],old.slice(0,6).map(x=>`<tr class="c" onclick="S.kmov=this.dataset.e;S.tab=8;R()" data-e="${esc(x.e)}"><td><b>${esc(x.e)}</b></td><td>${esc(x.reg)}</td><td>${esc(x.c)}</td><td><span class="tag r">${days(x)}</span></td></tr>`))}</div>`)}
+ ${art(4,`<div class="npb">${hbar(causes.slice(0,6).map(x=>({k:x.k,v:x.v,c:'#1f4fa8'})))}</div>`)}
+ </div>
+ <div class="npg2">${art(5)}${art(6)}</div>
+ <div class="imgs npim">${[0,1,3,4].map(i=>`<img src="${IMG[i]}">`).join('')}</div>
+ <footer class="npo" id="np-n7"><b>Cierre de edición</b> · Paquetexpress, logística segura. <span class="note adm" style="color:#6b6350">📎 Para actualizar: pulsa <b>Cargar archivos</b> y adjunta los 3 Excel vigentes (Dashboard de inmovilizadas, Flota del mes y Semáforo de tractos). Después pulsa <b>⬇ Generar data.enc.json</b> y súbelo a GitHub reemplazando el anterior.</span></footer></div>`}
+/* ---------- voz ---------- */
+const SS=window.speechSynthesis;let VO=[],vsel=null,rate=.98,gen=0,idx=-1,state='stop',Q=[],paused=false;
+const lsg=k=>{try{return localStorage.getItem(k)}catch(_){return null}},lss=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}};
+function loadVoices(){if(!SS)return;VO=SS.getVoices().filter(v=>/^es/i.test(v.lang));const sc=v=>(/natural|online|neural/i.test(v.name)?50:0)+(/es[-_]MX/i.test(v.lang)?20:/es[-_]US/i.test(v.lang)?10:0)+(/jorge|alvaro|raul|pablo|diego|carlos|jorge|male/i.test(v.name)?12:0)+(/google/i.test(v.name)?6:0)-(/compact/i.test(v.name)?10:0);
+ VO.sort((a,b)=>sc(b)-sc(a));const saved=lsg('np_voice');vsel=VO.find(v=>v.name===saved)||VO[0]||null;const s=document.getElementById('npv');if(s){s.innerHTML=VO.length?VO.map(v=>`<option value="${esc(v.name)}" ${vsel&&v.name===vsel.name?'selected':''}>${esc(v.name.replace(/Microsoft |Online \(Natural\) - /g,''))} (${v.lang})</option>`).join(''):'<option>Voz del sistema</option>'}}
+if(SS){loadVoices();SS.onvoiceschanged=loadVoices}
+const rs=lsg('np_rate');if(rs)rate=+rs;
+window.npVoice=n=>{vsel=VO.find(v=>v.name===n)||vsel;lss('np_voice',n);if(state==='play')restart()};
+window.npRate=v=>{rate=+v;lss('np_rate',v);if(state==='play')restart()};
+function jingle(){try{const A=new(window.AudioContext||window.webkitAudioContext)(),t=A.currentTime;[[523.25,0],[659.25,.16],[783.99,.32],[1046.5,.48]].forEach(([f,o])=>{const x=A.createOscillator(),g=A.createGain();x.type='triangle';x.frequency.value=f;g.gain.setValueAtTime(0,t+o);g.gain.linearRampToValueAtTime(.18,t+o+.03);g.gain.exponentialRampToValueAtTime(.001,t+o+.9);x.connect(g);g.connect(A.destination);x.start(t+o);x.stop(t+o+1)});setTimeout(()=>A.close(),1800)}catch(_){}}
+const chunks=t=>t.split(/(?<=[.!?:;])\s+/).reduce((a,s)=>{if(a.length&&(a[a.length-1].length+s.length)<150)a[a.length-1]+=' '+s;else a.push(s);return a},[]);
+function hi(i){document.querySelectorAll('.np .rd').forEach(e=>e.classList.remove('rd'));const el=document.getElementById(i<0?'np-n-1':i>=B.N.length?'np-n7':'np-n'+i);if(el){el.classList.add('rd');try{el.scrollIntoView({behavior:'smooth',block:'center'})}catch(_){}}}
+const ui=()=>{const p=document.getElementById('npi'),l=document.getElementById('npl'),s=document.getElementById('nps2'),g=document.getElementById('npgi'),t=document.getElementById('npst');if(!p)return;p.textContent=state==='play'?(paused?'▶':'⏸'):'🔊';l.textContent=state==='play'?(paused?'Continuar':'Pausar'):'Escuchar la edición';s.style.display=state==='play'?'':'none';const n=B.N.length+2;g.style.width=state==='play'?Math.max(2,100*(idx+1)/n)+'%':'0';t.textContent=state==='play'?(idx<0?'Apertura':idx>=B.N.length?'Cierre':B.N[idx].k):'Voz de locutor · '+B.N.length+' notas';document.getElementById('npa').classList.toggle('on',state==='play')};
+function speak(text,done,g){if(g!==gen)return;const u=new SpeechSynthesisUtterance(text);u.lang=vsel?vsel.lang:'es-MX';if(vsel)u.voice=vsel;u.rate=rate;u.pitch=.9;u.volume=1;let fin=false;const nx=()=>{if(fin)return;fin=true;if(g===gen)done()};u.onend=nx;u.onerror=nx;SS.speak(u)}
+function playFrom(i0,g){const items=[{t:B.intro,i:-1},...B.N.map((n,i)=>({t:n.say,i})),{t:B.outro,i:B.N.length}].filter(x=>x.t);Q=items;let k=items.findIndex(x=>x.i>=i0);if(k<0)k=0;
+ const nextItem=()=>{if(g!==gen)return;if(k>=Q.length){state='stop';idx=-1;hi(-9);ui();try{jingle()}catch(_){}return}const it=Q[k++];idx=it.i;hi(it.i);ui();const cs=chunks(it.t);let c=0;const nc=()=>{if(g!==gen)return;if(c>=cs.length){setTimeout(nextItem,380);return}speak(cs[c++],nc,g)};nc()};nextItem()}
+function restart(){const i=idx;gen++;SS.cancel();paused=false;setTimeout(()=>playFrom(i<0?-1:i,gen),120)}
+window.npPlay=function(){if(!SS){alert('Tu navegador no tiene voz integrada. Usa Edge o Chrome.');return}
+ if(state==='play'){if(paused){SS.resume();paused=false}else{SS.pause();paused=true}ui();return}
+ gen++;SS.cancel();state='play';paused=false;idx=-1;ui();jingle();const g=gen;setTimeout(()=>playFrom(-1,g),1300)};
+window.npStop=function(){gen++;try{SS.cancel()}catch(_){}state='stop';paused=false;idx=-1;document.querySelectorAll('.np .rd').forEach(e=>e.classList.remove('rd'));ui()};
+addEventListener('beforeunload',()=>{try{SS.cancel()}catch(_){}});
+/* ---------- css ---------- */
+const css=document.createElement('style');css.textContent=`.np{background:#f7f2e5;color:#1b1b1b;font-family:Georgia,'Times New Roman',serif;border-radius:6px;padding:18px 26px 22px;box-shadow:0 10px 40px rgba(0,0,0,.18);border:1px solid #d8cfb8;background-image:radial-gradient(rgba(120,100,50,.05) 1px,transparent 1px);background-size:5px 5px}
+.np .npt{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font:12px/1.4 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#5d5540;border-bottom:3px double #1b1b1b;padding-bottom:6px}
+.npn{font:900 clamp(34px,6vw,72px)/1.05 Georgia,'Times New Roman',serif;text-align:center;margin:10px 0 2px;letter-spacing:.01em;font-variant:small-caps;color:#14203f;transition:.3s}.nps{text-align:center;font:italic 14px Georgia,serif;color:#5d5540;border-bottom:1px solid #1b1b1b;padding-bottom:8px}
+.nptk{overflow:hidden;background:#14203f;color:#f7f2e5;margin:0 -26px;white-space:nowrap;font:700 12px system-ui,sans-serif;letter-spacing:.14em}.tkin{display:inline-block;padding:8px 0;animation:tk 55s linear infinite}.tkin span{margin:0 26px;color:#ffd36b}.tkin span:nth-child(odd){color:#fff}@keyframes tk{to{transform:translateX(-50%)}}
+.npa{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0;padding:10px 12px;background:#efe7d1;border:1px solid #d8cfb8;border-radius:12px;font:13px system-ui,sans-serif;position:sticky;top:64px;z-index:5;transition:.3s}.npa.on{background:#14203f;color:#fff;box-shadow:0 8px 26px rgba(20,32,63,.4)}
+.npp{display:flex;align-items:center;gap:9px;background:#c4283a;color:#fff;border:0;border-radius:999px;padding:9px 18px 9px 12px;font-size:14px;box-shadow:0 4px 12px rgba(196,40,58,.4)}.npp span{font-size:20px}.npp:hover{filter:brightness(1.1)}
+.nps2{background:#fff;border:1px solid #c9bfa3;border-radius:50%;width:36px;height:36px;padding:0}.npg{flex:1;min-width:120px;height:6px;border-radius:6px;background:rgba(120,100,60,.25);overflow:hidden}.npg i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c4283a,#ffab3d);transition:width .5s}.npsx{font-size:12px;opacity:.8;min-width:120px}
+.npa select{font:12px system-ui;padding:4px 6px;border-radius:8px;border:1px solid #c9bfa3;max-width:170px}.npa label{display:flex;gap:5px;align-items:center;font-size:12px}
+.npg1{display:grid;grid-template-columns:2fr 1fr;gap:22px;margin-top:6px}.npg3{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:16px;border-top:3px double #1b1b1b}.npg2{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:0;border-top:1px solid #1b1b1b}
+.npg3 .na,.npg2 .na{padding:14px 18px;border-right:1px solid #b9ae92}.npg3 .na:last-child,.npg2 .na:last-child{border-right:0}.npg3 .na:first-child,.npg2 .na:first-child{padding-left:0}
+.np .nk{font:700 11px system-ui,sans-serif;letter-spacing:.18em;color:#c4283a;margin-bottom:4px}.nhx{font:900 clamp(26px,3.4vw,42px)/1.1 Georgia,serif;margin:0 0 10px;border-bottom:1px solid #b9ae92;padding-bottom:10px}.nh{font:800 20px/1.2 Georgia,serif;margin:0 0 8px}
+.nbl{font:17px/1.55 Georgia,serif;margin:0;text-align:justify;hyphens:auto}.nbl:first-letter{float:left;font-size:54px;line-height:.85;padding:4px 8px 0 0;font-weight:900;color:#14203f}.nb{font:15px/1.5 Georgia,serif;margin:0 0 10px;text-align:left}.nb b,.nbl b{color:#14203f}
+.npw{display:flex;gap:18px;align-items:center}.npf{margin:14px 0 0}.npf img{width:100%;max-height:230px;object-fit:cover;border:1px solid #1b1b1b;filter:sepia(.25) contrast(1.05)}.npf figcaption{font:italic 12px Georgia,serif;color:#5d5540;margin-top:4px}
+.nsd{border-left:1px solid #b9ae92;padding-left:20px}.np .kpi{background:#fffdf6!important;border:1px solid #d8cfb8!important;box-shadow:none!important;text-align:center;padding:12px 8px!important}.np .kpi b{font:900 32px Georgia,serif!important}.np .kpi span{font:12px system-ui,sans-serif!important;color:#5d5540!important}
+.np .hb{font:13px system-ui,sans-serif}.np .hb .t{background:#e4dbc3!important}.np .note{color:#6b6350;font:12px system-ui}.np table{font:13px system-ui,sans-serif;background:transparent}.np th{background:transparent!important;border-bottom:2px solid #1b1b1b!important;color:#1b1b1b!important}.np td{border-bottom:1px solid #d8cfb8!important;color:#1b1b1b}.np tr.c:hover td{background:#efe7d1!important}.np .hint{color:#6b6350;font:12px system-ui}
+.np .na.rd,.np .npl.rd,.np .nsd.rd,.np .npo.rd,.np .npm.rd{background:rgba(255,211,107,.35);box-shadow:0 0 0 3px rgba(255,171,61,.7);border-radius:8px;transition:.3s}.npn.rd{color:#c4283a}.npm.rd{background:rgba(255,211,107,.35);border-radius:8px}
+.npim{margin-top:14px}.npim img{filter:sepia(.3);border:1px solid #1b1b1b}.npo{margin-top:14px;border-top:3px double #1b1b1b;padding-top:10px;font:italic 13px Georgia,serif;text-align:center;color:#3b3626}
+@media(max-width:1000px){.npg1,.npg3,.npg2{grid-template-columns:1fr}.nsd{border-left:0;padding-left:0}.npg3 .na,.npg2 .na{border-right:0;border-bottom:1px solid #b9ae92;padding-left:0}.npw{flex-direction:column;align-items:flex-start}.npa{top:56px}}`;document.head.appendChild(css);
+FN[0]=T0n;
+const _R=window.R;window.R=function(){if(S.tab!==0&&state!=='stop')window.npStop();const r=_R.apply(this,arguments);if(S.tab===0)setTimeout(()=>{loadVoices();ui()},0);return r};
+})();
 </script></body></html>
