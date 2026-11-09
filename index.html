@@ -1313,4 +1313,83 @@ const css=document.createElement('style');css.textContent=`.np{background:#f7f2e
 FN[0]=T0n;
 const _R=window.R;window.R=function(){if(S.tab!==0&&state!=='stop')window.npStop();const r=_R.apply(this,arguments);if(S.tab===0)setTimeout(()=>{loadVoices();ui()},0);return r};
 })();
+</script><script>/* ===== Diseño ejecutivo para pantallas internas ===== */
+(function(){
+const css=document.createElement('style');css.textContent=`
+body.inner main{max-width:1360px}
+body.inner #app{--rad:18px}
+/* encabezado de página */
+.ph{position:relative;overflow:hidden;display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:22px 26px;margin:0 0 18px;border-radius:20px;color:#fff;background:radial-gradient(520px 220px at 92% -20%,rgba(255,171,61,.35),transparent 60%),radial-gradient(600px 300px at 0% 120%,rgba(79,140,255,.45),transparent 60%),linear-gradient(120deg,#071634,#0b2a6b 70%,#123b8f);box-shadow:0 14px 36px rgba(7,22,52,.28)}
+.ph::after{content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;border:30px solid rgba(255,255,255,.05)}
+.ph .pi{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-size:27px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);flex:none}
+.ph .pt{flex:1;min-width:240px}.ph h2{margin:0;font-size:26px;letter-spacing:-.4px;color:#fff}.ph .sub{margin:4px 0 0;color:#b9cdf5;font-size:13px;max-width:760px}
+.ph .pp{display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1}.ph .pc{min-width:112px;padding:9px 14px;border-radius:14px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(4px)}
+.ph .pc small{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#9fbcf3}.ph .pc b{font-size:22px;letter-spacing:-.4px}
+/* filtros */
+body.inner .fbar{position:relative;display:flex;flex-wrap:wrap;gap:8px 8px;align-items:center;padding:12px 16px 12px 18px;margin:0 0 16px;border:1px solid var(--bd);border-left:4px solid var(--pr);border-radius:16px;background:var(--card);box-shadow:0 4px 16px rgba(18,35,63,.06)}
+body.inner .fbar::before{content:"FILTROS";font-size:10px;font-weight:800;letter-spacing:.16em;color:#fff;background:var(--pr);padding:4px 9px;border-radius:999px;margin-right:4px}
+body.inner .fbar~.fbar::before{display:none}.fpn{margin:0 0 16px;border:1px solid var(--bd);border-left:4px solid var(--pr);border-radius:16px;background:var(--card);box-shadow:0 4px 16px rgba(18,35,63,.06);overflow:hidden}body.inner .fpn .fbar{margin:0;border:0;border-radius:0;box-shadow:none;background:transparent}body.inner .fpn .fbar+.fbar{border-top:1px dashed var(--bd)}body.inner .fpn .fbar:not(:first-child)::before{display:none}body.inner .fbar b{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-left:8px}
+body.inner .fbar .chip{padding:6px 13px;border-radius:999px;font-size:12.5px;font-weight:500;background:var(--bg2);border:1px solid transparent;color:var(--tx);transition:all .15s}
+body.inner .fbar .chip:hover{border-color:var(--pr);transform:translateY(-1px)}
+body.inner .fbar .chip.on{background:linear-gradient(135deg,var(--pr),var(--pr2));color:#fff;box-shadow:0 4px 12px rgba(47,107,255,.4);font-weight:700}
+body.inner .fbar .chip.on::before{content:"✓ ";font-weight:900}
+body.inner .fbar input,body.inner .fbar select{padding:7px 11px;border-radius:10px;border:1px solid var(--bd);background:var(--bg2);font-size:12.5px;min-height:32px}
+body.inner .fbar button:not(.chip){border-radius:999px;padding:6px 14px;font-weight:600}
+.fclr{margin-left:auto;background:transparent!important;border:1px solid var(--rd)!important;color:var(--rd)!important;border-radius:999px;padding:5px 13px;font-size:12px;font-weight:700}.fclr:hover{background:var(--rd)!important;color:#fff!important}
+.fbar>span.note,.fbar>.hintf{color:var(--mu);font-size:12px}
+/* tarjetas */
+body.inner .card{border-radius:var(--rad,18px);border:1px solid var(--bd);box-shadow:0 1px 2px rgba(18,35,63,.05),0 10px 30px rgba(18,35,63,.07);padding:18px 20px;transition:box-shadow .2s,transform .2s}
+body.inner .card h3{display:flex;align-items:center;gap:9px;margin:0 0 12px;padding-bottom:10px;font-size:15px;letter-spacing:-.1px;border-bottom:1px solid var(--bd)}
+body.inner .card h3::before{content:"";width:5px;height:18px;border-radius:4px;background:linear-gradient(180deg,var(--pr),var(--ac))}
+body.inner .grid{gap:16px;margin-bottom:16px}
+/* KPIs */
+body.inner .card.kpi{position:relative;overflow:hidden;padding:16px 18px 14px 20px;min-height:116px}
+body.inner .card.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--kc,var(--pr))}
+body.inner .card.kpi::after{content:"";position:absolute;right:-26px;top:-26px;width:90px;height:90px;border-radius:50%;background:var(--kc,var(--pr));opacity:.08}
+body.inner .card.kpi b{font-size:34px;line-height:1.1;font-weight:800;letter-spacing:-1px}
+body.inner .card.kpi span{display:block;margin-top:6px;font-size:12px;font-weight:500;color:var(--mu);line-height:1.35}
+body.inner .card.kpi .ki{position:absolute;right:14px;top:12px;font-size:22px;font-style:normal;opacity:.85}
+body.inner .card.kpi:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(18,35,63,.14)}
+/* insight */
+body.inner .card:has(>p:only-child){background:linear-gradient(90deg,color-mix(in srgb,var(--pr) 9%,var(--card)),var(--card));border-left:5px solid var(--ac);position:relative;padding-left:58px}
+body.inner .card:has(>p:only-child)::before{content:"💡";position:absolute;left:18px;top:14px;font-size:24px}
+body.inner .card:has(>p:only-child)>p{margin:0;font-size:14.5px;line-height:1.65}
+/* barras */
+body.inner .hb{grid-template-columns:minmax(110px,230px) 1fr 70px;margin:7px 0;font-size:12.5px;padding:2px 6px;border-radius:10px}
+body.inner .hb .t{height:22px;border-radius:999px;background:color-mix(in srgb,var(--pr) 9%,var(--bg2));box-shadow:inset 0 1px 3px rgba(0,0,0,.08)}
+body.inner .hb .t i{border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,.18);line-height:22px;font-weight:600}
+body.inner .hb b{font-size:13px}
+/* tablas */
+body.inner table:not(.gt):not(.hm){border-collapse:separate;border-spacing:0}
+body.inner table:not(.gt):not(.hm) th{position:sticky;top:0;background:color-mix(in srgb,var(--pr) 7%,var(--card));font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mu);font-weight:700;padding:10px 10px;border-bottom:2px solid var(--bd)}
+body.inner table:not(.gt):not(.hm) td{padding:10px 10px;border-bottom:1px solid color-mix(in srgb,var(--bd) 70%,transparent)}
+body.inner table:not(.gt):not(.hm) tbody tr:nth-child(even) td,body.inner table:not(.gt):not(.hm) tr:nth-child(even) td{background:color-mix(in srgb,var(--bg2) 38%,transparent)}
+body.inner table tr.c:hover td{background:color-mix(in srgb,var(--pr) 12%,var(--card))!important}
+body.inner .tag{padding:3px 11px;border-radius:999px;font-weight:700;font-size:11px;letter-spacing:.02em;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+body.inner .hint{color:var(--mu);font-size:12px}
+body.inner .imgs img{border-radius:16px;box-shadow:0 8px 24px rgba(18,35,63,.18)}
+body.inner h2.old{display:none}
+@media(max-width:700px){.ph{padding:16px}.ph h2{font-size:21px}.ph .pc{min-width:90px}body.inner .card.kpi b{font-size:28px}}
+`;document.head.appendChild(css);
+const ICON={0:'🏠',1:'📊',2:'🚛',3:'🗺️',4:'📈',5:'🔴',6:'🔧',7:'♻️',8:'📒',9:'📋',10:'💡',11:'🛠️'};
+const KI=l=>{l=l.toLowerCase();return /up time/.test(l)?'📈':/tractos/.test(l)?'🚛':/días|dias/.test(l)?'⏱':/más de|mas de|pico/.test(l)?'🔥':/entran|ingres/.test(l)?'⬆':/salen|saldo/.test(l)?'⬇':/activos/.test(l)?'🏭':/detenid|abiert|inmoviliz/.test(l)?'⚠️':'📊'};
+function deco(){const on=S.tab!==0;document.body.classList.toggle('inner',on);if(!on)return;const app=document.getElementById('app');if(!app)return;
+ // encabezado
+ if(!app.querySelector('.ph')){const h=app.querySelector(':scope>h2');if(h){const sub=h.nextElementSibling&&h.nextElementSibling.classList.contains('sub')?h.nextElementSibling:null;
+  let up2='–',cl='#fff',nd='–';try{const d=det(),dt=d.filter(x=>x.tr),at=actTr(),u=up(at.length,dt.length);if(u!=null){up2=u.toFixed(1)+'%';cl=u>=META?'#5ee3a4':u>=95?'#ffcf7a':'#ff8794'}nd=d.length}catch(_){}
+  const ph=document.createElement('div');ph.className='ph';ph.innerHTML=`<div class="pi">${ICON[S.tab]||'📊'}</div><div class="pt"></div><div class="pp"><div class="pc"><small>Up Time tractos</small><b style="color:${cl}">${up2}</b></div><div class="pc"><small>Detenidas hoy</small><b>${nd}</b></div><div class="pc"><small>Corte</small><b style="font-size:16px;line-height:1.7">${S.corte||''}</b></div></div>`;
+  const pt=ph.querySelector('.pt');pt.appendChild(h);if(sub)pt.appendChild(sub);app.insertBefore(ph,app.firstChild)}}
+ // agrupar filtros consecutivos
+ app.querySelectorAll('.fbar').forEach(f=>{if(f.parentNode.classList.contains('fpn'))return;const p=f.previousElementSibling;if(p&&p.classList.contains('fbar'))return;const g=[f];let n=f.nextElementSibling;while(n&&n.classList.contains('fbar')){g.push(n);n=n.nextElementSibling}if(g.length<2)return;const w=document.createElement('div');w.className='fpn';f.parentNode.insertBefore(w,f);g.forEach(x=>w.appendChild(x))});
+ const h2=app.querySelector('.ph h2');if(h2)h2.textContent=h2.textContent.replace(/^[^\p{L}\p{N}]+/u,'');
+ // KPIs
+ app.querySelectorAll('.card.kpi').forEach(k=>{const b=k.querySelector('b'),sp=k.querySelector('span');if(b){try{k.style.setProperty('--kc',getComputedStyle(b).color)}catch(_){}}
+  if(!k.querySelector('.ki')){const i=document.createElement('em');i.className='ki';i.textContent=KI(sp?sp.textContent:'');k.appendChild(i)}});
+ // limpiar filtros
+ app.querySelectorAll('.fbar').forEach(f=>{if(f.querySelector('.fclr'))return;const on=[...f.querySelectorAll('.chip.on')].filter(c=>/tg\('/.test(c.getAttribute('onclick')||''));if(!on.length)return;
+  const keys=[...new Set(on.map(c=>(c.getAttribute('onclick').match(/tg\('([^']+)'/)||[])[1]).filter(Boolean))];
+  const b=document.createElement('button');b.className='fclr';b.textContent='✕ Limpiar filtros ('+on.length+')';b.onclick=()=>{keys.forEach(k=>{try{S[k].clear()}catch(_){}});R()};f.appendChild(b)})}
+const _R=window.R;window.R=function(){const r=_R.apply(this,arguments);try{deco()}catch(e){console.warn('deco',e)}return r};
+try{deco()}catch(_){}
+})();
 </script></body></html>
