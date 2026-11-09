@@ -144,7 +144,7 @@ body{padding-left:272px}
 <div class="sg">HERRAMIENTAS</div><div class="tl">
 <button onclick="juntaOpen();sbC()" title="Pantalla completa que rota los KPIs para juntas"><i>📺</i><span>Modo junta</span></button>
 <button onclick="f360ask();sbC()" title="Ficha completa de una unidad"><i>🔎</i><span>Ficha 360</span></button>
-<button onclick="waOpen();sbC()" title="Resumen listo para pegar en WhatsApp"><i>💬</i><span>WhatsApp</span></button></div>
+<button onclick="waOpen();sbC()" title="Resumen listo para pegar en WhatsApp"><i>💬</i><span>WhatsApp</span></button></div><button class="si" style="margin-top:8px" onclick="rfOpen();sbC()" title="Informe de refacciones y recomendaciones"><i>📦</i><span>Informe de refacciones</span></button><button class="si" onclick="avOpen();sbC()" title="Aviso del día"><i>🔔</i><span>Aviso del día</span></button>
 <div class="adm"><div class="sg">DATOS</div><span id="pst" class="note"></span>
 <button class="si" onclick="document.getElementById('fi').click()" title="Adjunta los archivos actualizados"><i>📎</i><span>Cargar archivos</span></button>
 <button class="si hl" onclick="exportData()" title="Genera el archivo de datos para subir a GitHub"><i>⬇</i><span>Generar data.enc.json</span></button></div></div>
@@ -1194,7 +1194,7 @@ document.addEventListener('click',e=>{const el=e.target.closest&&e.target.closes
  e.stopPropagation();show(t,arr)},true);
 const _R=window.R;window.R=function(){const r=_R.apply(this,arguments);try{mark()}catch(e){console.warn('dd',e)}return r};
 try{mark()}catch(_){}
-window.__ddmark=mark;
+window.__ddmark=mark;window.ddShow=show;
 })();
 </script><script>/* ===== Portada = periódico con locutor ===== */
 (function(){
@@ -1391,5 +1391,119 @@ function deco(){const on=S.tab!==0;document.body.classList.toggle('inner',on);if
   const b=document.createElement('button');b.className='fclr';b.textContent='✕ Limpiar filtros ('+on.length+')';b.onclick=()=>{keys.forEach(k=>{try{S[k].clear()}catch(_){}});R()};f.appendChild(b)})}
 const _R=window.R;window.R=function(){const r=_R.apply(this,arguments);try{deco()}catch(e){console.warn('deco',e)}return r};
 try{deco()}catch(_){}
+})();
+</script><script>/* ===== Aviso de apertura + Informe de refacciones ===== */
+(function(){
+const dAdd=(d,n)=>{const t=new Date(d+'T12:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)};
+const n1=v=>v.toFixed(1),esN=n=>Math.round(n).toLocaleString('es-MX'),pl=(n,a,b)=>n===1?a:b;
+const dur=x=>x.o?dd(x.i,x.o):days(x);
+const isRef=x=>eh(x)==='Falta de Refacciones'||/refacciones pend/i.test(x.k||'');
+const piezaOf=x=>{const t=(x.n||'').toLowerCase();for(const [nm,re] of PZ){if(re.test(t))return nm}return null};
+const short=s=>s.replace(/\s*\(.*$/,'');
+const MESN=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const mlab=ym=>MESN[+ym.slice(5,7)-1]+' '+ym.slice(2,4);
+const top=(a,f,n)=>{const m={};a.forEach(x=>{const v=f(x);if(v==null||v==='')return;(m[v]=m[v]||[]).push(x)});return Object.entries(m).map(([k,v])=>({k,v,n:v.length,d:v.reduce((s,x)=>s+dur(x),0)})).sort((a,b)=>b.n-a.n).slice(0,n||8)};
+function data(){
+ const c=S.corte,w12=dAdd(c,-365),all12=SEG.filter(x=>x.i&&x.i>=w12&&x.i<=c),R=all12.filter(isRef),RT=R.filter(x=>x.tr);
+ const d=det(),dt=d.filter(x=>x.tr),at=actTr(),u=up(at.length,dt.length)||0,openR=d.filter(isRef),openRT=openR.filter(x=>x.tr);
+ const u2=up(at.length,dt.length-openRT.length)||u,daysR=R.reduce((s,x)=>s+dur(x),0),daysAll=all12.reduce((s,x)=>s+dur(x),0),daysRT=RT.reduce((s,x)=>s+dur(x),0);
+ const eq=daysRT/365,pp=at.length?100*eq/at.length:0,nr=all12.filter(x=>!isRef(x));
+ const avgR=R.length?daysR/R.length:0,avgN=nr.length?nr.reduce((s,x)=>s+dur(x),0)/nr.length:0;
+ const months=[];for(let i=11;i>=0;i--){const t=new Date(c+'T12:00:00Z');t.setUTCDate(1);t.setUTCMonth(t.getUTCMonth()-i);const ym=t.toISOString().slice(0,7),a=all12.filter(x=>x.i.slice(0,7)===ym),r=a.filter(isRef);months.push({ym,n:r.length,t:a.length,arr:r})}
+ const reg=top(R,x=>x.reg,8),mot=top(R,x=>x.g,6),cat=top(R,x=>x.c,6);
+ const pzm={};R.forEach(x=>{const p=piezaOf(x);if(p)(pzm[p]=pzm[p]||[]).push(x)});const pz=Object.entries(pzm).map(([k,v])=>({k,v,n:v.length,d:v.reduce((s,x)=>s+dur(x),0)})).sort((a,b)=>b.n-a.n);
+ const compra=pz.find(p=>/Cotizaci/.test(p.k)),pzr=pz.filter(p=>!/Cotizaci/.test(p.k)).slice(0,8);
+ const byU={};R.forEach(x=>(byU[x.e]=byU[x.e]||[]).push(x));const rec=Object.entries(byU).filter(([e,a])=>a.length>=3).map(([e,a])=>({e,n:a.length,d:a.reduce((s,x)=>s+dur(x),0),arr:a,reg:a[0].reg,g:a[0].g})).sort((a,b)=>b.n-a.n);
+ const long7=R.filter(x=>dur(x)>7).length,long15=R.filter(x=>dur(x)>15).length;
+ return {c,w12,all12,R,RT,d,dt,at,u,u2,openR,openRT,daysR,daysAll,daysRT,eq,pp,avgR,avgN,months,reg,mot,cat,pz,pzr,compra,rec,long7,long15};
+}
+const esc2=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let REG={};let _id=0;const reg=(t,a)=>{const k='r'+(++_id);REG[k]={t,a};return k};
+const bars=(rows,col,tt)=>{const mx=Math.max(1,...rows.map(r=>r.n));return rows.map(r=>{const k=reg(tt+': '+short(r.k),r.v);return `<div class="rfr" onclick="rfDrill('${k}')" title="Clic para ver las unidades"><span class="l">${esc2(short(r.k))}</span><div class="t"><i style="width:${Math.max(3,100*r.n/mx)}%;background:${col}"></i></div><b>${r.n}</b><small>${esN(r.d)} d</small></div>`}).join('')};
+function reportHtml(D){
+ const {R,RT,u,u2,openR,openRT,daysR,daysAll,eq,pp,avgR,avgN,months,reg:rg,mot,cat,pzr,compra,rec,long7,long15,all12}=D;
+ const share=all12.length?100*R.length/all12.length:0,shd=daysAll?100*daysR/daysAll:0,mmx=Math.max(1,...months.map(m=>m.n));
+ const topP=pzr.slice(0,3).map(p=>short(p.k)),topR=rg[0],topM=mot[0];
+ const regShare=topR&&R.length?100*(rg.slice(0,2).reduce((s,r)=>s+r.n,0))/R.length:0;
+ const kp=(v,l,s,col,ic)=>`<div class="rfk" style="--kc:${col}"><em>${ic}</em><b>${v}</b><span>${l}</span>${s?`<small>${s}</small>`:''}</div>`;
+ const openTbl=openR.length?`<table><tr><th>Económico</th><th>Región</th><th>Tipo</th><th>Días</th><th>Pieza / tema</th><th>Último comentario</th></tr>${openR.sort((a,b)=>days(b)-days(a)).map(x=>`<tr class="c" onclick="openEv(${SEG.indexOf(x)})"><td><b>${esc2(x.e)}</b></td><td>${esc2(x.reg)}</td><td>${esc2(x.t)}</td><td><span class="tag ${days(x)>30?'r':days(x)>7?'a':'g'}">${days(x)}</span></td><td>${esc2(piezaOf(x)?short(piezaOf(x)):'—')}</td><td class="cm">${esc2((x.n||'Sin comentario').split(/\r?\n/)[0].slice(0,110))}</td></tr>`).join('')}</table>`:'<p class="note">Hoy no hay unidades detenidas por refacciones. ✅</p>';
+ const recoms=[];
+ recoms.push(['Alta','Stock de seguridad de piezas críticas',`Las piezas que más aparecen en los comentarios son <b>${topP.map(esc2).join(', ')}</b>. Definir mínimo/máximo en almacén regional y reposición automática al llegar al mínimo.`,'Almacén / Compras','Bajar ≥30% los eventos por estas piezas']);
+ if(compra)recoms.push(['Alta','Autorización y compra en 24 h',`<b>${compra.n}</b> eventos mencionan cotización, autorización o compra pendiente: la unidad espera un trámite, no una pieza. Pre-autorizar un monto por pieza crítica y fijar SLA de cotización de 24 h.`,'Compras / Gerencia','Cotización ≤ 24 h, autorización ≤ 24 h']);
+ recoms.push(['Alta','Regla de escalamiento por días sin pieza',`Hay <b>${long7}</b> eventos con más de 7 días y <b>${long15}</b> con más de 15. Escalar automáticamente: día 3 a Compras, día 7 a Gerencia regional, día 15 a Dirección con plan alterno (otro proveedor, reparación externa o refaccionamiento exprés).`,'Mantenimiento / Compras','0 unidades >15 días por refacciones']);
+ if(topR)recoms.push(['Media',`Abasto regional en ${esc2(short(topR.k))}`,`${rg.slice(0,2).map(r=>esc2(short(r.k))).join(' y ')} concentran <b>${n1(regShare)}%</b> de los eventos. Mantener inventario propio y esquema de préstamo entre sucursales cercanas para piezas de alta rotación.`,'Almacén regional','Rotación y surtido mensual por región']);
+ if(topM)recoms.push(['Media',`Paquete de refacciones por motor`,`El mayor volumen es <b>${esc2(short(topM.k))}</b> (${topM.n} eventos). Armar un kit de refacciones por motor/marca y negociar con la agencia entrega en 48 h para las piezas más repetidas.`,'Compras / Proveedor','Convenio con tiempo de entrega ≤48 h']);
+ const fz=D.pz.find(p=>/Filtros/.test(p.k));recoms.push(['Media','Compra planeada de consumibles',`Filtros, aceite y lubricantes son demanda predecible${fz?` y aun así aparecen en <b>${fz.n}</b> eventos`:''}: programar compras con el calendario de preventivos para que nunca sean causa de paro.`,'Mantenimiento / Compras','0 eventos por consumibles']);
+ if(rec.length)recoms.push(['Media','Revisión de reincidentes',`<b>${rec.length}</b> unidades repiten falta de refacciones 3 o más veces en 12 meses (encabeza ${esc2(rec[0].e)} con ${rec[0].n}). Revisar causa raíz: pieza equivocada, calidad del proveedor o falla de fondo.`,'Mantenimiento','Reincidencia a 0 en 90 días']);
+ recoms.push(['Baja','Tablero semanal compartido con Compras',`Revisar cada semana las unidades detenidas por refacciones con Compras y Almacén usando este informe (sección "Hoy"), con responsable y fecha compromiso por pieza.`,'Mantenimiento + Compras','Junta semanal de 15 min']);
+ const rb={Alta:'r',Media:'a',Baja:'g'};
+ const mcols=months.map(m=>{const k=reg('Falta de refacciones · '+mlab(m.ym),m.arr);return `<div class="rfm" onclick="rfDrill('${k}')" title="${m.n} de ${m.t} eventos"><b>${m.n}</b><div class="bar"><i style="height:${Math.max(3,100*m.n/mmx)}%"></i></div><small>${mlab(m.ym)}</small><em>${m.t?Math.round(100*m.n/m.t):0}%</em></div>`}).join('');
+ const recT=rec.length?`<table><tr><th>Económico</th><th>Región</th><th>Motor / marca</th><th>Veces</th><th>Días acumulados</th></tr>${rec.slice(0,8).map(r=>{const k=reg('Reincidente: '+r.e,r.arr);return `<tr class="c" onclick="rfDrill('${k}')"><td><b>${esc2(r.e)}</b></td><td>${esc2(r.reg)}</td><td>${esc2(short(r.g||''))}</td><td><span class="tag r">${r.n}</span></td><td>${esN(r.d)}</td></tr>`}).join('')}</table>`:'<p class="note">Sin unidades con 3 o más eventos por refacciones en 12 meses.</p>';
+ return `<div class="rfh"><div><small>MANTENIMIENTO DE ACTIVOS LOGÍSTICOS · PAQUETEXPRESS</small><h1>Informe de refacciones</h1><p>Cómo la falta de refacciones ha detenido la flota y qué hacer para evitarlo · últimos 12 meses al corte ${D.c}</p></div></div>
+ <div class="rfs"><h2>Lo que hay que saber</h2><ul class="rfl">
+ <li><b>1 de cada ${share?Math.max(1,Math.round(100/share)):'–'}</b> inmovilizaciones involucra falta de refacciones (${R.length} de ${all12.length} eventos, ${n1(share)}%).</li>
+ <li>Suman <b>${esN(daysR)} días-unidad</b> (${n1(shd)}% de todos los días perdidos). Solo en tractos equivale a <b>${n1(eq)} tractos detenidos todo el año</b>, es decir <b>${n1(pp)} puntos de Up Time</b>.</li>
+ <li>Hoy hay <b>${openR.length}</b> de ${D.d.length} unidades detenidas esperando refacciones${openRT.length?` (${openRT.length} tractos). Liberarlas llevaría el Up Time de ${n1(u)}% a <b>${n1(u2)}%</b>`:''}.</li>
+ ${topP.length?`<li>Las piezas que más se mencionan: <b>${topP.map(esc2).join(', ')}</b>.</li>`:''}
+ ${topR?`<li>Región más afectada: <b>${esc2(short(topR.k))}</b> (${topR.n} eventos).</li>`:''}</ul></div>
+ <div class="rfg4">${kp(R.length,'eventos por refacciones (12 m)',n1(share)+'% de todos los eventos','#c4283a','📦')}${kp(esN(daysR),'días-unidad perdidos',n1(shd)+'% del total','#d98a00','⏱')}${kp(n1(pp)+' pp','Up Time restado por año','≈ '+n1(eq)+' tractos todo el año','#1f4fa8','📉')}${kp(openR.length,'detenidas hoy por refacciones',D.d.length?Math.round(100*openR.length/D.d.length)+'% de las detenidas':'','#6a3fb5','🚨')}</div>
+ <div class="rfsec"><h2>📅 Evolución mensual</h2><p class="note">Eventos por mes con falta de refacciones y su % sobre el total del mes. Clic en una columna para ver las unidades.</p><div class="rfmc">${mcols}</div></div>
+ <div class="rfsec"><h2>🚨 Hoy: unidades esperando refacciones</h2><p class="note">Clic en una fila para abrir el detalle. “Pieza / tema” se detecta del texto de los comentarios.</p>${openTbl}</div>
+ <div class="rfcols"><div class="rfsec"><h2>🔩 Piezas que más faltan</h2><p class="note">Detectadas en comentarios (un evento puede mencionar varias).</p>${bars(pzr,'#c4283a','Pieza')}${compra?`<p class="rfwarn">⚠️ Además, <b>${compra.n}</b> eventos esperan <b>cotización / autorización / compra</b> (sin pieza específica): <a onclick="rfDrill('${reg('Cotización / autorización pendiente',compra.v)}')">ver unidades</a>.</p>`:''}</div>
+ <div class="rfsec"><h2>🗺️ Por región</h2><p class="note">Eventos por refacciones (barra) y días perdidos.</p>${bars(rg,'#1f4fa8','Región')}</div></div>
+ <div class="rfcols"><div class="rfsec"><h2>🚛 Por motor / marca</h2>${bars(mot,'#6a3fb5','Motor')}</div><div class="rfsec"><h2>🔧 Por tipo de falla</h2>${bars(cat,'#d98a00','Falla')}</div></div>
+ <div class="rfsec"><h2>♻️ Unidades reincidentes (3 o más eventos en 12 meses)</h2>${recT}</div>
+ <div class="rfsec rfrec"><h2>✅ Recomendaciones para evitar paros por falta de refacciones</h2><div class="rfrg">${recoms.map((r,i)=>`<div class="rfc"><div class="rfct"><span class="tag ${rb[r[0]]}">${r[0]}</span><b>${i+1}. ${r[1]}</b></div><p>${r[2]}</p><div class="rfcm"><span>👤 ${r[3]}</span><span>🎯 ${r[4]}</span></div></div>`).join('')}</div></div>
+ <p class="note rfft">Notas: “Evento por refacciones” = estatus Falta de Refacciones (o refacciones pendientes en taller/agencia) registrado en el Dashboard de inmovilizadas. Los días-unidad van de ingreso a salida (o al corte si siguen abiertas). El informe no incluye costos de piezas; con costo por día de unidad detenida se puede valorar el impacto en pesos. Las duraciones promedio por evento: refacciones ${n1(avgR)} d vs ${n1(avgN)} d el resto: se atienden en menos tiempo, pero ocurren con mucha frecuencia.</p>`}
+const css=document.createElement('style');css.id='rfcss';css.textContent=`
+#rfx,#avx{position:fixed;inset:0;display:none;background:rgba(2,8,30,.66);backdrop-filter:blur(4px);padding:18px;overflow:auto}#rfx{z-index:140}#avx{z-index:130;align-items:center;justify-content:center}#rfx.on{display:block}#avx.on{display:flex}
+.rfsheet{max-width:1120px;margin:0 auto;background:var(--bg);color:var(--tx);border-radius:22px;box-shadow:0 30px 90px rgba(0,0,0,.55);overflow:hidden;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.rfbar{position:sticky;top:0;z-index:5;display:flex;gap:8px;justify-content:flex-end;padding:10px 16px;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--bd)}.rfbar button{padding:7px 14px;border-radius:999px;font-weight:600}
+.rfbody{padding:0 26px 26px}
+.rfh{margin:0 -26px 18px;padding:28px 30px;color:#fff;background:radial-gradient(520px 220px at 92% -20%,rgba(255,171,61,.4),transparent 60%),linear-gradient(120deg,#071634,#0b2a6b 70%,#123b8f)}.rfh small{letter-spacing:.16em;color:#9fbcf3;font-size:11px}.rfh h1{margin:6px 0 4px;font-size:34px;letter-spacing:-.8px}.rfh p{margin:0;color:#b9cdf5}
+.rfs{background:linear-gradient(90deg,color-mix(in srgb,var(--ac) 14%,var(--card)),var(--card));border:1px solid var(--bd);border-left:6px solid var(--ac);border-radius:16px;padding:16px 22px;margin-bottom:16px}.rfs h2{margin:0 0 8px;font-size:17px}.rfl{margin:0;padding-left:20px}.rfl li{margin:6px 0;font-size:14.5px}
+.rfg4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}.rfk{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px 18px 14px 20px;box-shadow:0 8px 24px rgba(18,35,63,.08)}.rfk::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--kc)}.rfk em{position:absolute;right:12px;top:10px;font-style:normal;font-size:22px}.rfk b{display:block;font-size:32px;letter-spacing:-1px;color:var(--kc)}.rfk span{font-size:12.5px;color:var(--mu)}.rfk small{display:block;margin-top:4px;font-size:11.5px;font-weight:600}
+.rfsec{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:18px 20px;margin-bottom:16px;box-shadow:0 8px 24px rgba(18,35,63,.06);overflow-x:auto}.rfsec h2{margin:0 0 4px;font-size:16px}.rfsec .note{margin:0 0 12px;font-size:12px;color:var(--mu)}
+.rfcols{display:grid;grid-template-columns:1fr 1fr;gap:16px}.rfcols .rfsec{margin-bottom:16px}
+.rfr{display:grid;grid-template-columns:minmax(100px,190px) 1fr 34px 62px;gap:8px;align-items:center;margin:6px 0;padding:3px 6px;border-radius:10px;font-size:12.5px;cursor:pointer}.rfr:hover{background:color-mix(in srgb,var(--pr) 10%,var(--card))}.rfr .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rfr .t{height:18px;border-radius:999px;background:var(--bg2);overflow:hidden}.rfr .t i{display:block;height:100%;border-radius:999px}.rfr b{text-align:right}.rfr small{color:var(--mu);text-align:right}
+.rfmc{display:grid;grid-template-columns:repeat(12,1fr);gap:8px;align-items:end;height:200px}.rfm{display:flex;flex-direction:column;align-items:center;height:100%;cursor:pointer;border-radius:10px;padding:4px 2px}.rfm:hover{background:color-mix(in srgb,var(--pr) 10%,var(--card))}.rfm .bar{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}.rfm .bar i{display:block;width:62%;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#c4283a,#ff8794)}.rfm b{font-size:13px}.rfm small{font-size:11px;color:var(--mu)}.rfm em{font-style:normal;font-size:10.5px;color:var(--ac);font-weight:700}
+.rfwarn{margin:12px 0 0;padding:10px 14px;border-radius:12px;background:color-mix(in srgb,var(--ac) 16%,var(--card));font-size:13px}.rfwarn a{color:var(--pr);cursor:pointer;font-weight:700;text-decoration:underline}
+.rfsheet table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}.rfsheet th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);padding:9px 10px;border-bottom:2px solid var(--bd);background:color-mix(in srgb,var(--pr) 6%,var(--card))}.rfsheet td{padding:9px 10px;border-bottom:1px solid var(--bd)}.rfsheet td.cm{white-space:normal;min-width:240px;color:var(--mu)}.rfsheet tr.c{cursor:pointer}.rfsheet tr.c:hover td{background:color-mix(in srgb,var(--pr) 10%,var(--card))}
+.rfrg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}.rfc{border:1px solid var(--bd);border-radius:16px;padding:14px 16px;background:linear-gradient(180deg,color-mix(in srgb,var(--pr) 5%,var(--card)),var(--card))}.rfct{display:flex;gap:10px;align-items:center;margin-bottom:6px}.rfc p{margin:0 0 10px;font-size:13.5px}.rfcm{display:flex;flex-wrap:wrap;gap:8px}.rfcm span{font-size:11.5px;background:var(--bg2);border-radius:999px;padding:3px 10px}
+.rfft{padding:6px 4px;font-size:11.5px}
+.avb{width:min(900px,100%);background:linear-gradient(180deg,#0b1e4d,#071634);color:#fff;border-radius:24px;box-shadow:0 30px 90px rgba(0,0,0,.6);overflow:hidden;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;max-height:94vh;overflow-y:auto}
+.avh{padding:26px 30px 14px;background:radial-gradient(520px 200px at 90% -30%,rgba(255,171,61,.4),transparent 60%)}.avh small{letter-spacing:.18em;color:#9fbcf3;font-size:11px}.avh h2{margin:6px 0 2px;font-size:28px;letter-spacing:-.6px}.avh p{margin:0;color:#b9cdf5}
+.avk{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:6px 30px 14px}.avk div{padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12)}.avk b{display:block;font-size:28px;letter-spacing:-.8px}.avk span{font-size:11.5px;color:#9fbcf3}
+.avl{padding:0 30px 6px}.avl h3{font-size:12px;letter-spacing:.16em;color:#ffcf7a;margin:8px 0}.avl ul{margin:0;padding:0;list-style:none}.avl li{display:flex;gap:10px;padding:9px 12px;margin:6px 0;border-radius:12px;background:rgba(255,255,255,.06);font-size:13.5px}.avl li.w{background:rgba(255,171,61,.14);border-left:4px solid #ffab3d}.avl li.d{background:rgba(255,93,108,.14);border-left:4px solid #ff5d6c}.avl li.o{background:rgba(54,208,138,.12);border-left:4px solid #36d08a}.avl b{color:#fff}
+.avf{display:flex;gap:12px;flex-wrap:wrap;padding:14px 30px 26px}.avf button{border:0;border-radius:999px;padding:13px 24px;font-size:15px;font-weight:700;cursor:pointer}.avp{background:linear-gradient(135deg,#2f6bff,#1f4fd0);color:#fff;box-shadow:0 8px 22px rgba(47,107,255,.5)}.avs{background:rgba(255,171,61,.18);color:#ffcf7a!important;border:1px solid rgba(255,171,61,.5)!important}.avf button:hover{filter:brightness(1.12)}
+@media(max-width:860px){.rfg4,.avk{grid-template-columns:1fr 1fr}.rfcols,.rfrg{grid-template-columns:1fr}.rfbody{padding:0 14px 18px}.rfh{margin:0 -14px 14px;padding:20px 18px}.rfh h1{font-size:26px}.rfmc{height:170px;gap:3px}.rfm small{font-size:9px}}
+@media print{body>*:not(#rfx){display:none!important}#rfx{position:static;background:none;padding:0;display:block!important}.rfbar{display:none}.rfsheet{box-shadow:none;border-radius:0}}`;document.head.appendChild(css);
+const rf=document.createElement('div');rf.id='rfx';rf.innerHTML='<div class="rfsheet"><div class="rfbar"><button id="rfb" style="display:none" onclick="rfBack()">← Volver al aviso</button><button onclick="rfPrint()">🖨 Imprimir / PDF</button><button onclick="rfClose()">✕ Cerrar</button></div><div class="rfbody" id="rfbody"></div></div>';document.body.appendChild(rf);
+rf.addEventListener('click',e=>{if(e.target===rf)rfClose()});
+const av=document.createElement('div');av.id='avx';document.body.appendChild(av);
+let fromAv=false;
+window.rfDrill=k=>{const r=REG[k];if(r&&window.ddShow)window.ddShow(r.t,r.a)};
+window.rfOpen=function(fromAviso){fromAv=!!fromAviso;REG={};_id=0;const D=data();document.getElementById('rfbody').innerHTML=reportHtml(D);document.getElementById('rfb').style.display=fromAv?'':'none';av.classList.remove('on');rf.classList.add('on');rf.scrollTop=0};
+window.rfClose=()=>{rf.classList.remove('on');if(typeof sbC==='function')sbC()};
+window.rfBack=()=>{rf.classList.remove('on');avOpen()};
+window.rfPrint=()=>{const w=window.open('','_blank');if(!w){window.print();return}w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Informe de refacciones</title><style>:root{--bg:#fff;--bg2:#eef2f9;--card:#fff;--tx:#12233f;--mu:#5d6b82;--pr:#2f6bff;--ac:#e08a00;--rd:#e0394b;--gn:#16a36a;--bd:#d9e1ef}body{margin:0;background:#fff}.tag{padding:2px 9px;border-radius:999px;color:#fff;background:var(--pr);font-size:11px}.tag.r{background:var(--rd)}.tag.a{background:var(--ac)}.tag.g{background:var(--gn)}'+css.textContent.split('@media print')[0].replace(/#rfx,#avx\{[^}]*\}/,'')+'.rfbar{display:none}@page{margin:10mm}.rfsec,.rfc,.rfk{break-inside:avoid}</style></head><body><div class="rfsheet" style="box-shadow:none;border-radius:0"><div class="rfbody">'+document.getElementById('rfbody').innerHTML+'</div></div><script>setTimeout(function(){print()},500)<\/script></body></html>');w.document.close()};
+/* ---- aviso ---- */
+function avData(){const d=det(),dt=d.filter(x=>x.tr),at=actTr(),u=up(at.length,dt.length)||0,lib=relMeta(at.length,dt.length),o90=d.filter(x=>days(x)>90),old=d.slice().sort((a,b)=>days(b)-days(a))[0],rows=regTable().filter(r=>r.a).sort((a,b)=>a.u-b.u),below=rows.filter(r=>r.u<META),c=S.corte,w0=dAdd(c,-7),ent=SEG.filter(x=>x.i&&x.i>w0&&x.i<=c).length,sal=SEG.filter(x=>x.o&&!x.est&&x.o>w0&&x.o<=c).length,openR=d.filter(isRef),ds=d.reduce((s,x)=>s+days(x),0);return {d,dt,u,lib,o90,old,rows,below,ent,sal,openR,ds}}
+function avOpen(){const A=avData(),hr=new Date().getHours(),sal0=hr<12?'Buenos días':hr<19?'Buenas tardes':'Buenas noches',nm=(typeof WHO==='string'&&WHO)||'';const col=A.u>=META?'#5ee3a4':A.u>=95?'#ffcf7a':'#ff8794';
+ const li=[];
+ if(A.u<META)li.push(['d',`🎯`,`El Up Time de tractos está en <b>${n1(A.u)}%</b>, por debajo de la meta de ${META}%: faltan <b>${n1(META-A.u)} pp</b> (liberar <b>${A.lib}</b> ${pl(A.lib,'tracto','tractos')}).`]);else li.push(['o','✅',`El Up Time de tractos cumple la meta: <b>${n1(A.u)}%</b>.`]);
+ if(A.below.length)li.push(['w','🗺️',`<b>${A.below.length}</b> ${pl(A.below.length,'región bajo la meta','regiones bajo la meta')}; la más crítica es <b>${esc2(A.below[0].r)}</b> (${n1(A.below[0].u)}%).`]);
+ if(A.o90.length)li.push(['d','⏳',`<b>${A.o90.length}</b> ${pl(A.o90.length,'unidad lleva','unidades llevan')} más de 90 días detenida${A.o90.length===1?'':'s'}${A.old?`; la más antigua, <b>${esc2(A.old.e)}</b>, suma ${days(A.old)} días`:''}.`]);
+ if(A.d.length)li.push(['w','📦',`<b>${A.openR.length}</b> de las ${A.d.length} detenidas esperan <b>refacciones</b>. Consulta el informe para ver piezas, regiones y recomendaciones.`]);
+ li.push([A.ent>A.sal?'w':'o','🔄',`Últimos 7 días: <b>${A.ent}</b> ${pl(A.ent,'entró','entraron')} y <b>${A.sal}</b> ${pl(A.sal,'salió','salieron')} (${A.ent>A.sal?'se acumularon más':'se liberaron más'}).`]);
+ av.innerHTML=`<div class="avb"><div class="avh"><small>AVISO DE APERTURA · LA GACETA DE LA FLOTA</small><h2>${sal0}${nm?', '+esc2(nm):''}</h2><p>Esto es lo más relevante de la flota inmovilizada al corte del ${S.corte}.</p></div>
+ <div class="avk"><div><b style="color:${col}">${n1(A.u)}%</b><span>Up Time tractos · meta ${META}%</span></div><div><b>${A.d.length}</b><span>unidades detenidas (${A.dt.length} tractos)</span></div><div><b>${esN(A.ds)}</b><span>días-unidad perdidos</span></div><div><b style="color:${A.o90.length?'#ff8794':'#5ee3a4'}">${A.o90.length}</b><span>con más de 90 días</span></div></div>
+ <div class="avl"><h3>LO MÁS RELEVANTE</h3><ul>${li.map(l=>`<li class="${l[0]}"><span>${l[1]}</span><span>${l[2]}</span></li>`).join('')}</ul></div>
+ <div class="avf"><button class="avp" onclick="avGo()">Entrar al portal →</button><button class="avs" onclick="rfOpen(true)">📦 Informe de refacciones</button></div></div>`;av.classList.add('on')}
+window.avGo=()=>{av.classList.remove('on');try{S.tab=0;R();scrollTo(0,0)}catch(_){}};
+window.avOpen=avOpen;
+/* mostrar al entrar */
+const mo=new MutationObserver(()=>{if(!document.body.classList.contains('locked')&&!mo.__shown){mo.__shown=true;setTimeout(()=>{try{avOpen()}catch(e){console.warn('aviso',e)}},450)}else if(document.body.classList.contains('locked')){mo.__shown=false;av.classList.remove('on');rf.classList.remove('on')}});
+mo.observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 </script></body></html>
