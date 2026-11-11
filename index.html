@@ -147,6 +147,7 @@ body{padding-left:272px}
 <button onclick="waOpen();sbC()" title="Resumen listo para pegar en WhatsApp"><i>💬</i><span>WhatsApp</span></button></div><button class="si" style="margin-top:8px" onclick="rfOpen();sbC()" title="Informe de refacciones y recomendaciones"><i>📦</i><span>Informe de refacciones</span></button><button class="si" onclick="avOpen();sbC()" title="Aviso del día"><i>🔔</i><span>Aviso del día</span></button>
 <div class="adm"><div class="sg">DATOS</div><span id="pst" class="note"></span>
 <button class="si" onclick="document.getElementById('fi').click()" title="Adjunta los archivos actualizados"><i>📎</i><span>Cargar archivos</span></button>
+<button class="si" onclick="usOpen()" title="Crear un usuario nuevo de consulta o administrador"><i>👤</i><span>Agregar usuario</span></button>
 <button class="si hl" onclick="exportData()" title="Genera el archivo de datos para subir a GitHub"><i>⬇</i><span>Generar data.enc.json</span></button></div></div>
 <div class="sbu"><div class="av" id="av">?</div><div class="un"><b id="who"></b><span id="rol"></span></div><button onclick="theme()" id="thb" title="Cambiar tema">🌙</button><button class="out" onclick="logout()" title="Cerrar sesión">⎋</button></div>
 <input id="fi" type="file" multiple accept=".xlsx,.xlsm" hidden onchange="loadFiles(this.files)"></header>
@@ -1505,5 +1506,31 @@ window.avOpen=avOpen;
 /* mostrar al entrar */
 const mo=new MutationObserver(()=>{if(!document.body.classList.contains('locked')&&!mo.__shown){mo.__shown=true;setTimeout(()=>{try{avOpen()}catch(e){console.warn('aviso',e)}},450)}else if(document.body.classList.contains('locked')){mo.__shown=false;av.classList.remove('on');rf.classList.remove('on')}});
 mo.observe(document.body,{attributes:true,attributeFilter:['class']});
+})();
+</script><script>/* ===== Administración de usuarios (solo admin) ===== */
+(function(){
+let RAWK=null;const _ow=openWith;openWith=async function(raw,role,name){RAWK=raw;return _ow(raw,role,name)};
+const css=document.createElement('style');css.textContent=`#usx{position:fixed;inset:0;z-index:170;display:none;align-items:center;justify-content:center;background:rgba(2,8,30,.62);backdrop-filter:blur(3px);padding:16px}#usx.on{display:flex}
+#usx .bx{width:min(460px,100%);background:var(--card);color:var(--tx);border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.5);overflow:hidden;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+#usx .hd{padding:18px 22px;background:linear-gradient(120deg,#071634,#0b2a6b);color:#fff}#usx .hd h3{margin:0;font-size:18px}#usx .hd p{margin:3px 0 0;color:#b9cdf5;font-size:12.5px}
+#usx .bd{padding:18px 22px}#usx label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin:10px 0 4px}#usx input,#usx select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--bg2);font-size:14px;box-sizing:border-box;color:var(--tx)}
+#usx .ft{display:flex;gap:10px;justify-content:flex-end;padding:0 22px 20px}#usx .ft button{padding:10px 20px;border-radius:999px;font-weight:700}#usx .ok{background:var(--pr);color:#fff;border:0}#usx .msg{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:13px;display:none}#usx .msg.e{display:block;background:rgba(224,57,75,.12);color:var(--rd)}#usx .msg.s{display:block;background:rgba(22,163,106,.12);color:var(--gn)}`;document.head.appendChild(css);
+const m=document.createElement('div');m.id='usx';m.innerHTML=`<div class="bx"><div class="hd"><h3>👤 Agregar usuario</h3><p>El acceso queda guardado dentro de data.enc.json (la contraseña no se guarda en texto).</p></div><div class="bd"><label>Usuario</label><input id="usu" autocomplete="off" placeholder="ej. Eleon"><label>Contraseña</label><input id="usp" type="text" autocomplete="off" placeholder="mínimo 6 caracteres"><label>Nombre a mostrar</label><input id="usn" autocomplete="off" placeholder="igual que el usuario"><label>Tipo de acceso</label><select id="usr"><option value="consulta">Consulta (solo ver)</option><option value="admin">Administrador (carga datos)</option></select><div class="msg" id="usm"></div></div><div class="ft"><button onclick="usClose()">Cerrar</button><button class="ok" onclick="usAdd()">Agregar</button></div></div>`;document.body.appendChild(m);
+m.addEventListener('click',e=>{if(e.target===m)usClose()});
+window.usOpen=()=>{if(ROLE!=='admin')return;['usu','usp','usn'].forEach(i=>document.getElementById(i).value='');document.getElementById('usm').className='msg';m.classList.add('on');if(typeof sbC==='function')sbC()};
+window.usClose=()=>m.classList.remove('on');
+const say=(t,k)=>{const e=document.getElementById('usm');e.textContent=t;e.className='msg '+k};
+window.usAdd=async function(){try{if(ROLE!=='admin'||!RAWK)return say('Entra como administrador para agregar usuarios.','e');
+ const u=document.getElementById('usu').value.trim().toLowerCase(),p=document.getElementById('usp').value,nm=document.getElementById('usn').value.trim()||document.getElementById('usu').value.trim(),r=document.getElementById('usr').value;
+ if(!/^[a-z0-9._-]{3,30}$/.test(u))return say('El usuario debe tener 3 a 30 letras o números, sin espacios ni acentos.','e');
+ if(p.length<6)return say('La contraseña debe tener al menos 6 caracteres.','e');
+ const hh=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(u)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,16);
+ const ex=ENC.u.findIndex(x=>x.h===hh);if(ex>=0)return say('Ese usuario ya existe.','e');
+ const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),km=await crypto.subtle.importKey('raw',new TextEncoder().encode(u+':'+p),'PBKDF2',false,['deriveKey']),k=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:ENC.n,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt']);
+ const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,new TextEncoder().encode(JSON.stringify({k:tb(RAWK),r,n:nm}))));
+ ENC.u.push({h:hh,s:tb(salt),i:tb(iv),c:tb(ct)});
+ say('✔ Usuario "'+nm+'" agregado ('+(r==='admin'?'administrador':'consulta')+'). Ahora pulsa "⬇ Generar data.enc.json" en el menú y sube ese archivo a GitHub reemplazando el anterior.','s');
+ const st=document.getElementById('pst');if(st)st.textContent='👤 Usuario nuevo pendiente: genera y sube data.enc.json';
+}catch(e){say('No se pudo agregar: '+(e.message||e),'e')}};
 })();
 </script></body></html>
