@@ -1590,12 +1590,13 @@ function invPost(){INVR={bajasEnFlota:[],sinFlota:[],soloFlota:[],sinRegion:[]};
   window.FLALL=nf;FL=nf;FLM=new Map(FL.map(f=>[nz(f.e),f]));gm.forEach((f,k)=>{if(!FLM.has(k))FLM.set(k,f)});
   INVR.sinRegion=FL.filter(f=>f.inv&&!f.gl&&!f.r)}
  // PXGL por región (Flota o Seguimiento)
- FL.forEach(f=>{if(f.r&&nz(f.r)==='PXGL'){f.gl=1;PXS.add(nid(f.e))}else if(PXS.has(nid(f.e)))f.gl=1});
+ FL.forEach(f=>{if((f.r&&nz(f.r)==='PXGL')||/^PX/.test(nz(f.e))){f.gl=1;PXS.add(nid(f.e))}else if(PXS.has(nid(f.e)))f.gl=1});
  SEG.forEach(x=>{if(x.reg==='PXGL')PXS.add(nid(x.e))});
  // ids de Seguimiento con otro formato (PX0102 vs PX00102)
  const byN=new Map();FL.forEach(f=>{if(f.gl)byN.set(nid(f.e),f);(f.al||[]).forEach(a=>byN.set(nid(a),f))});
  SEG.forEach(x=>{let f=FLM.get(nz(x.e));if(!f){f=byN.get(nid(x.e));if(f)FLM.set(nz(x.e),f)}
-  x.f=f;x.reg=(f&&f.r)?cr(f.r):(cr(x.r)||'SIN REGIÓN');x.g=x.tr?mg(x.e):(f?gF(f):(cr(x.t)||'OTRO'));x.gl=PXS.has(nid(x.e))||x.reg==='PXGL'||!!(f&&f.gl)});
+  x.f=f;x.reg=(f&&f.r)?cr(f.r):(cr(x.r)||'SIN REGIÓN');x.g=x.tr?mg(x.e):(f?gF(f):(cr(x.t)||'OTRO'));x.gl=PXS.has(nid(x.e))||/^PX/.test(nz(x.e))||x.reg==='PXGL'||!!(f&&f.gl)});
+ window.SEGALL=SEG.slice();{const T=FL.filter(f=>f.gl&&isTrF(f)&&(S.proc||nz(f.s)!=='PROCESO'));window.PXI={tr:T.length,det:SEG.filter(x=>x.gl&&x.tr&&x.i&&!x.o).length,dias:SEG.filter(x=>x.gl&&x.tr&&x.i&&!x.o).reduce((s,x)=>s+Math.max(0,dd(x.i,S.corte)),0)}}
  window.FLALL=FL.slice();
  if(!hasGl()){FL=FL.filter(f=>!f.gl);SEG=SEG.filter(x=>!x.gl);FLM=new Map(FL.map(f=>[nz(f.e),f]))}}
 const _ing=window.ingest;window.ingest=function(){const f=S.from,t=S.to,c=S.corte;try{invPre()}catch(e){console.warn('inv pre',e)}
@@ -1605,7 +1606,7 @@ try{const v=localStorage.getItem('px_gl');if(v==='0')S.pxgl=false}catch(_){}
 
 /* ---------- botón CONSIDERAR PXGL ---------- */
 function pxUI(){let b=$g('pxg');if(!b){const nav=$g('nav');if(!nav||!nav.parentNode)return;b=document.createElement('div');b.id='pxg';nav.parentNode.insertBefore(b,nav)}
- const on=hasGl();b.innerHTML=`<button class="pxt ${on?'on':'off'}" onclick="pxTog()" title="Prende o apaga PXGL en TODOS los indicadores del portal (Flota, detenciones, Up Time, gastos, etc.)"><span class="pxs"><i></i></span><span class="pxl"><b>CONSIDERAR PXGL</b><small>${on?'Con PXGL · todos los indicadores':'Sin PXGL · se excluye de todo'}</small></span></button>`}
+ const on=hasGl();b.innerHTML=`<button class="pxt ${on?'on':'off'}" onclick="pxTog()" title="Prende o apaga PXGL en TODOS los indicadores del portal (Flota, detenciones, Up Time, gastos, etc.)"><span class="pxs"><i></i></span><span class="pxl"><b>CONSIDERAR PXGL</b><small>${on?'Con PXGL · todos los indicadores':'Sin PXGL · se excluye de todo'}</small><small>${window.PXI?PXI.tr+' tractos PXGL · '+PXI.det+' detenidos hoy':''}</small></span></button>`}
 window.pxTog=function(){S.pxgl=!hasGl();try{localStorage.setItem('px_gl',S.pxgl?'1':'0')}catch(_){}const f=S.from,t=S.to,c=S.corte;try{ingest()}catch(e){console.warn(e)}if(f){S.from=f;S.to=t;S.corte=c}pxUI();R()};
 const _R=window.R;window.R=function(){const r=_R.apply(this,arguments);try{pxUI();const ph=document.querySelector('.ph');if(ph){ph.querySelectorAll('.pxb').forEach(e=>e.remove());ph.insertAdjacentHTML('beforeend',`<span class="pxb ${hasGl()?'on':'off'}">${hasGl()?'CON PXGL':'SIN PXGL'}</span>`)}}catch(_){}return r};
 
