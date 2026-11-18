@@ -1610,6 +1610,26 @@ function cover(o){const cells=[],merges=[],heights={},R=r=>(cells[r]=cells[r]||[
   else if(b.pairs){R(r)[0]={v:b.sec,s:SEC};fill(r,SEC);mg(r,0,W-1);heights[r]=22;r++;b.pairs.forEach(p=>{R(r)[0]={v:p[0],s:LB};R(r)[1]={v:null,s:LB};mg(r,0,1);R(r)[2]={v:p[1],s:VL};for(let c=3;c<W;c++)R(r)[c]={v:null,s:VL};mg(r,2,W-1);heights[r]=Math.max(20,Math.ceil(String(p[1]).length/90)*15+6);r++});r++}});
  return{name:o.name,cells,merges,heights,widths:[15,15,15,15,15,15,15,15],freeze:null,filter:null,tab:NAVY,landscape:true}}
 window.XW={table,cover,save,sty};
+/* ---- Excel de la pestaña visible (lee lo que se ve en pantalla) ---- */
+window.gxTabXlsx=function(){try{const X=window.XW,app=document.getElementById('app'),act=app.querySelector('.chip.on'),nm=(act?act.textContent:'Gastos').trim(),
+ pf=(S.pxgl===false?'SIN PXGL':'CON PXGL'),clN={T:'Todos',P:'Preventivo',C:'Correctivo',PC:'Prev. + Corr.',S:'Sin OT'}[S.gcl]||'Todos',
+ pl=window.__gx&&window.__gx().pl?window.__gx().pl:(x=>x),sub='Periodo '+S.gd+' a '+S.gh+' · '+clN+' · Región: '+(S.gz||'Todas')+' · '+pf+' · Corte '+(S.corte||'');
+ const tx=e=>(e.innerText||e.textContent||'').replace(/\s+/g,' ').trim(),sheets=[],used=new Set();
+ const kp=[...app.querySelectorAll('.card.kpi')].map(k=>({l:tx(k.querySelector('span')||k),v:tx(k.querySelector('b')||k)})).filter(k=>k.l&&k.v);
+ const lines=[...app.querySelectorAll('p')].filter(p=>!p.classList.contains('sub')&&!p.classList.contains('hint')&&!p.closest('.gxr,.fbar')).map(tx).filter(t=>t.length>40).slice(0,10);
+ const kv=v=>{const ab=/^(-?)\$([\d,]*\.?\d+)\s?([MK])$/.exec(v);if(ab)return{v:+(ab[1]+ab[2].replace(/,/g,''))*(ab[3]==='M'?1e6:1e3),t:'$'};const m=/^(-?)\$?([\d,]+(?:\.\d+)?)$/.exec(v);if(m&&/^-?\$/.test(v))return{v:+(m[1]+m[2].replace(/,/g,'')),t:'$'};const p=/^(-?[\d,]*\.?\d+)%$/.exec(v);if(p)return{v:+p[1].replace(/,/g,'')/100,t:'%'};return null};
+ const nk=kp.map(k=>{const q=kv(k.v);return q?{l:k.l,v:q.v,t:q.t}:{l:k.l,v:k.v,t:'s'}});
+ const blocks=[];if(nk.length)blocks.push({sec:'Indicadores',kpis:nk.slice(0,16)});if(lines.length)blocks.push({sec:'Lectura',lines});
+ blocks.push({sec:'Filtros y parámetros',pairs:[['Pestaña',nm],['Periodo',S.gd+' a '+S.gh],['Tipo de gasto',clN],['Incluye Matriz',S.gmz?'Sí':'No'],['Región',S.gz||'Todas'],['Tipo de unidad',S.gt2||'Todos'],['Modelo',S.gmo||'Todos'],['Cuenta',S.gcu||'Todas'],['Considerar PXGL',pf],['Fecha de corte',S.corte||''],['Generado por',(typeof WHO!=='undefined'?WHO:'')+' (Paquetín)']]});
+ sheets.push(X.cover({name:'Resumen',title:'Gastos de mantenimiento · '+nm,sub:sub,blocks}));
+ [...app.querySelectorAll('table')].forEach((t,i)=>{const trs=[...t.querySelectorAll('tr')].filter(r=>r.querySelector('th,td'));if(trs.length<2)return;
+  const hd=[...trs[0].children].map(tx),nc=hd.length,body=trs.slice(1).map(r=>[...r.children].map(tx).slice(0,nc)).filter(r=>r.some(c=>c));if(!body.length)return;
+  const ty=hd.map((_,c)=>{const ks=body.map(r=>r[c]).filter(v=>v!=null&&v!=='').map(kv);const ok=ks.filter(Boolean);if(ks.length&&ok.length>=ks.length*0.7){const m={};ok.forEach(q=>m[q.t]=(m[q.t]||0)+1);return Object.keys(m).sort((a,b)=>m[b]-m[a])[0]}const nums=body.map(r=>r[c]).filter(v=>v!=null&&v!=='');if(nums.length&&nums.every(v=>/^-?[\d,]+(\.\d+)?$/.test(v)&&!/^0\d/.test(v)))return'n';return's'});
+  const rows=body.map(r=>hd.map((_,c)=>{const v=r[c]==null?'':r[c];if(ty[c]==='n')return v===''?'':+v.replace(/,/g,'');if(ty[c]==='$'||ty[c]==='%'){const q=kv(v);return q&&q.t===ty[c]?q.v:v}return v}));
+  const card=t.closest('.card'),h=card&&card.querySelector('h3,h4'),ttl=((h?tx(h):'').replace(/\(.*?\)/g,'').replace(/\s+/g,' ').trim())||('Tabla '+(i+1));let sn=ttl.replace(/[\[\]:*?\/\\]/g,' ').replace(/[^\wÁÉÍÓÚÜÑáéíóúüñ \-().#%$]/g,'').trim().slice(0,28)||'Tabla',k=2,b=sn;while(used.has(sn.toLowerCase()))sn=b.slice(0,26)+' '+k++;used.add(sn.toLowerCase());
+  sheets.push(X.table({name:sn,title:ttl,sub:sub,freezeCols:1,cols:hd.map((h,c)=>({h:h,t:ty[c],w:Math.min(48,Math.max(11,ty[c]==='s'?Math.max(...body.slice(0,200).map(r=>(r[c]||'').length),h.length)*1.05+2:15))})),rows}))});
+ X.save(sheets,'Gastos_'+nm.replace(/[^\wÁÉÍÓÚÜÑáéíóúüñ]+/g,'_').replace(/^_|_$/g,'')+'_'+S.gd+'_a_'+S.gh+'.xlsx')}catch(e){alert('No se pudo generar el Excel: '+e.message)}};
+
 })();
 /* ===== INVENTARIO ordenado (Paquetexpress / PXGL) + botón CONSIDERAR PXGL ===== */
 (function(){
@@ -1623,10 +1643,10 @@ const vMap=v=>{v=nz(v);return /^TRACTO/.test(v)?'TRACTOCAMIÓN':/^REMOLQ/.test(v
 const idOk=v=>v!=null&&/^[A-Z0-9][A-Z0-9\-\.]{0,13}$/i.test(String(v).trim())&&nz(v)!=='PGL';
 
 /* ---------- lectura de los Excel de inventario ---------- */
-function hdr(a){for(let h=0;h<Math.min(10,a.length);h++){const r=(a[h]||[]).map(nrm);const id=r.findIndex(v=>/^NO\.? ?ECO/.test(v)&&!/ANTERIOR/.test(v));if(id>=0&&r.some(v=>/^(MARCA|VEHICULO)$/.test(v))){const f=re=>r.findIndex(v=>re.test(v));return{h,c:{id,ant:f(/ANTERIOR/),pl:f(/^PLACAS?$/),v:f(/^VEHICULO$/),ma:f(/^MARCA$/),sb:f(/^SUB.?MARCA$/),mo:f(/^MODELO$/),nm:f(/^NO\.? ?(DE )?MOTOR$/),tm:f(/^(TIPO DE MOTOR|MOTOR)$/),sr:f(/SERIE/),pi:f(/^(DESCRIPCION \(PIES\)|MEDIDA)$/),su:f(/^SUSPENSION$/),es:f(/^ESTADO$/),tp:f(/^(TIPO|TIPO DE LANZA)$/)}}}}return null}
+function hdr(a){for(let h=0;h<Math.min(10,a.length);h++){const r=(a[h]||[]).map(nrm);const id=r.findIndex(v=>/^NO\.? ?ECO/.test(v)&&!/ANTERIOR/.test(v));if(id>=0&&r.some(v=>/^(MARCA|VEHICULO)$/.test(v))){const f=re=>r.findIndex(v=>re.test(v));return{h,c:{id,ant:f(/ANTERIOR/),pl:f(/^PLACAS?$/),v:f(/^VEHICULO$/),ma:f(/^MARCA$/),sb:f(/^SUB.?MARCA$/),mo:f(/^MODELO$/),nm:f(/^NO\.? ?(DE )?MOTOR$/),tm:f(/^(TIPO DE MOTOR|MOTOR)$/),sr:f(/SERIE/),pi:f(/^(DESCRIPCION \(PIES\)|MEDIDA)$/),su:f(/^SUSPENSION$/),es:f(/^ESTADO$/),tp:f(/^(TIPO|TIPO DE LANZA)$/),zn:f(/^ZONA$/)}}}}return null}
 function rowsOf(a,H,hoja,defV){const g=(w,j)=>j>=0&&w[j]!=null&&String(w[j]).trim()!==''&&String(w[j]).trim()!=='*'?w[j]:null,out=[];
  for(let i=H.h+1;i<a.length;i++){const w=a[i];if(!w||!idOk(w[H.c.id]))continue;const c=H.c,ant=g(w,c.ant);
-  out.push({e:String(w[c.id]).trim().toUpperCase(),a:ant==null?'':String(ant).trim().toUpperCase(),pl:String(g(w,c.pl)||''),v:(()=>{const v=vMap(g(w,c.v)||defV);return defV&&!['TRACTOCAMIÓN','REMOLQUE','DOLLY','RABON','TORTON','PORTACONTENEDOR'].includes(v)?vMap(defV):v})(),ma:nz(g(w,c.ma)),sb:nz(g(w,c.sb)),mo:g(w,c.mo)==null?'':String(g(w,c.mo)).trim(),nm:String(g(w,c.nm)||''),tm:nz(g(w,c.tm)),sr:nz(g(w,c.sr)),pi:g(w,c.pi)==null?'':String(g(w,c.pi)).replace(/[^0-9]/g,''),su:nrm(g(w,c.su)),es:nz(g(w,c.es))||'ACTIVO',tp:nz(g(w,c.tp)),h:hoja})}
+  out.push({e:String(w[c.id]).trim().toUpperCase(),a:ant==null?'':String(ant).trim().toUpperCase(),pl:String(g(w,c.pl)||''),v:(()=>{const v=vMap(g(w,c.v)||defV);return defV&&!['TRACTOCAMIÓN','REMOLQUE','DOLLY','RABON','TORTON','PORTACONTENEDOR'].includes(v)?vMap(defV):v})(),ma:nz(g(w,c.ma)),sb:nz(g(w,c.sb)),mo:g(w,c.mo)==null?'':String(g(w,c.mo)).trim(),nm:String(g(w,c.nm)||''),tm:nz(g(w,c.tm)),sr:nz(g(w,c.sr)),pi:g(w,c.pi)==null?'':String(g(w,c.pi)).replace(/[^0-9]/g,''),su:nrm(g(w,c.su)),es:nz(g(w,c.es))||'ACTIVO',tp:nz(g(w,c.tp)),zn:(()=>{const z=nz(g(w,c.zn));return /^(N\/A|#N\/A|0|-)?$/.test(z)?'':z})(),h:hoja})}
  return out}
 function invRead(wb){const px=[],gl=[],bj=[],names=wb.SheetNames,hasPX=names.some(n=>/^tractos$/i.test(n));
  names.forEach(n=>{const k=nrm(n);let ent=null,defV='';
@@ -1659,7 +1679,7 @@ function invPost(){INVR={bajasEnFlota:[],sinFlota:[],soloFlota:[],sinRegion:[]};
  if(I){const bj=new Set();(I.bj||[]).forEach(b=>{if(b[0])bj.add(nz(b[0]));if(b[1])bj.add(nz(b[1]))});
   const px=new Set(),nf=[],seen=new Set();
   (I.px||[]).forEach(r=>{const id=nz(r.e);px.add(id);if(r.a)px.add(nz(r.a));seen.add(id);const o=byId.get(id);
-   if(o){o.inv=r;nf.push(o)}else{const f={e:r.e,v:r.v,s:r.es||'ACTIVO',r:null,u:null,c:descC(r),mo:r.mo,ma:r.ma,inv:r,nuevo:1};nf.push(f);INVR.sinFlota.push(f)}});
+   if(o){o.inv=r;if(r.zn)o.r=r.zn;nf.push(o)}else{const f={e:r.e,v:r.v,s:r.es||'ACTIVO',r:r.zn||null,u:null,c:descC(r),mo:r.mo,ma:r.ma,inv:r,nuevo:1};nf.push(f);INVR.sinFlota.push(f)}});
   old.forEach(f=>{const id=nz(f.e);if(seen.has(id))return;if(bj.has(id)){INVR.bajasEnFlota.push(f);return}nf.push(f);f.soloFlota=1;INVR.soloFlota.push(f)});
   const gm=new Map();
   (I.gl||[]).forEach(r=>{const ids=[r.e,...(r.al||[])];ids.forEach(x=>PXS.add(nid(x)));let f=null;for(const x of ids){const o=byId.get(nz(x));if(o){f=o;break}}
@@ -2056,8 +2076,8 @@ const SUBS=[SRes,SVar,SReg,SCta,SPC,STip,SPv,SUni,SCru,SDet,SEv,SKm];
 function TG(){if(!GX)return nodata();DR=[];LASTD=null;PATHR=[];if(S.gst==null||S.gst>=SUBS.length)S.gst=0;
  const subs=`<div class="gxr" style="flex-wrap:wrap;gap:6px">${ST.map((t,i)=>`<span class="chip ${S.gst===i?'on':''}" onclick="gxTab(${i})">${t}</span>`).join('')}</div>`;
  let body;try{body=SUBS[S.gst]()}catch(e){console.error(e);body='<div class="card"><p>No se pudo mostrar esta sección: '+esc(e.message)+'</p></div>'}
- return `<h2>Gastos de mantenimiento</h2><p class="sub">Oracle Fusion · Logística · ${pl(GX.pe[0])} a ${pl(GX.pe[GX.pe.length-1])}${GX.g.meta&&GX.g.meta.gen?' · cargado '+esc(GX.g.meta.gen):''}</p>${subs}${bar()}${ABR()}${body}
- <div class="gxr" style="margin-top:14px"><button class="btn" onclick="gxXlsx()">⬇ Excel de esta vista</button><button class="btn" onclick="gxDeck()">▶ Presentación</button></div>`}
+ return `<h2>Gastos de mantenimiento</h2><p class="sub">Oracle Fusion · Logística · ${pl(GX.pe[0])} a ${pl(GX.pe[GX.pe.length-1])}${GX.g.meta&&GX.g.meta.gen?' · cargado '+esc(GX.g.meta.gen):''}</p>${subs}<div class="gxr" style="justify-content:flex-end;margin:4px 0"><button class="btn" onclick="${S.gst===10?'gxEvXlsx()':'gxTabXlsx()'}">⬇ Descargar Excel de esta pestaña</button></div>${bar()}${ABR()}${body}
+ <div class="gxr" style="margin-top:14px"><button class="btn" onclick="${S.gst===10?'gxEvXlsx()':'gxTabXlsx()'}">⬇ Descargar Excel de esta pestaña</button><button class="btn" onclick="gxXlsx()">⬇ Excel completo de Gastos</button><button class="btn" onclick="gxDeck()">▶ Presentación</button></div>`}
 
 /* ---------- texto resumen (WhatsApp, Gaceta, Hallazgos) ---------- */
 function sum2(){if(!GX)return null;const full=GX.full,B=full[full.length-1],A=full[full.length-2],all=GXR.filter(r=>S.pxgl!==false||!r.gl);
