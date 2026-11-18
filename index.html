@@ -1647,7 +1647,7 @@ window.gxTabXlsx=function(){try{const X=window.XW,app=document.getElementById('a
  const kv=v=>{const ab=/^(-?)\$([\d,]*\.?\d+)\s?([MK])$/.exec(v);if(ab)return{v:+(ab[1]+ab[2].replace(/,/g,''))*(ab[3]==='M'?1e6:1e3),t:'$'};const m=/^(-?)\$?([\d,]+(?:\.\d+)?)$/.exec(v);if(m&&/^-?\$/.test(v))return{v:+(m[1]+m[2].replace(/,/g,'')),t:'$'};const p=/^(-?[\d,]*\.?\d+)%$/.exec(v);if(p)return{v:+p[1].replace(/,/g,'')/100,t:'%'};return null};
  const nk=kp.map(k=>{const q=kv(k.v);return q?{l:k.l,v:q.v,t:q.t}:{l:k.l,v:k.v,t:'s'}});
  const blocks=[];if(nk.length)blocks.push({sec:'Indicadores',kpis:nk.slice(0,16)});if(lines.length)blocks.push({sec:'Lectura',lines});
- blocks.push({sec:'Filtros y parámetros',pairs:[['Pestaña',nm],['Periodo',S.gd+' a '+S.gh],['Tipo de gasto',clN],['Incluye Matriz',S.gmz?'Sí':'No'],['Región',S.gz||'Todas'],['Tipo de unidad',S.gt2||'Todos'],['Modelo',S.gmo||'Todos'],['Cuenta',S.gcu||'Todas'],['Considerar PXGL',pf],['Fecha de corte',S.corte||''],['Generado por',(typeof WHO!=='undefined'?WHO:'')+' (Paquetín)']]});
+ blocks.push({sec:'Filtros y parámetros',pairs:[['Pestaña',nm],['Periodo',S.gd+' a '+S.gh],['Tipo de gasto',clN],['Incluye Matriz',S.gmz?'Sí':'No'],['Región',S.gz||'Todas'],['Tipo de unidad',S.gt2||'Todos'],['Modelo',S.gmo||'Todos'],['Cuenta',S.gcu||'Todas'],['Unidad de negocio',S.gub?String(S.gub).replace(/^\d+\s*/,''):'Ambas'],['Considerar PXGL',pf],['Fecha de corte',S.corte||''],['Generado por',(typeof WHO!=='undefined'?WHO:'')+' (Paquetín)']]});
  sheets.push(X.cover({name:'Resumen',title:'Gastos de mantenimiento · '+nm,sub:sub,blocks}));
  [...app.querySelectorAll('table')].forEach((t,i)=>{const trs=[...t.querySelectorAll('tr')].filter(r=>r.querySelector('th,td'));if(trs.length<2)return;
   const hd=[...trs[0].children].map(tx),nc=hd.length,body=trs.slice(1).map(r=>[...r.children].map(tx).slice(0,nc)).filter(r=>r.some(c=>c));if(!body.length)return;
@@ -1830,7 +1830,7 @@ function gxBuild(){GX=null;GXR=[];GXO=[];UI=new Map();INV={z:new Map(),t:new Map
   else{const sn=(g.id||{})[u];if(sn){z=sn[0];t=sn[1];mo=sn[2]}else{z=zn((segReg.get(k)||{}).r||FUERA);t=MM[k]?mg(u):(d||'SIN DESCRIPCIÓN');mo='SIN MODELO'}}
   if(!mat&&(/FREIGHTLINER M2/.test(t)||(f&&/FREIGHTLINER M2/i.test(f.ma||''))))t='FREIGHTLINER M2';if(!mat&&f&&realZ(z)){(g.id=g.id||{})[u]=[z,t,mo]}else if(!mat&&!f&&(g.id||{})[u]&&/FREIGHTLINER M2/.test(t)){t='FREIGHTLINER M2'}o={u,z,t,mo,mat,gl:!mat&&(!!(window.PXS&&PXS.has(nidg(u)))||!!(f&&f.gl)||z==='PXGL'),fuera:!mat&&!f,inv:!!f,e:f?f.e:u,f:f||null,d};UI.set(u,o);return o};
  const kc=g.cu.map(clsName),sis=g.cu.map(sisOf),pe=g.pe;
- GXR=g.r.map(a=>{const u=g.un[a[1]],o=info(u),c=g.cu[a[2]];return{p:pe[a[0]],u,c,pv:g.pv[a[3]],no:g.no[a[4]],sb:g.sb[a[5]],tp:a[6],m:a[7],n:a[8],k:kc[a[2]]||TPC[a[6]],sis:sis[a[2]],z:o.z,t:o.t,mo:o.mo,mat:o.mat,gl:o.gl,eq:/MONTACARGA/.test(c)||/MONTACARGA|KALMAR/.test(o.t)?'Montacargas':'Móviles'}});
+ GXR=g.r.map(a=>{const u=g.un[a[1]],o=info(u),c=g.cu[a[2]];return{p:pe[a[0]],u,c,pv:g.pv[a[3]],no:g.no[a[4]],sb:g.sb[a[5]],tp:a[6],m:a[7],n:a[8],k:kc[a[2]]||TPC[a[6]],sis:sis[a[2]],z:o.z,t:o.t,mo:o.mo,mat:o.mat,gl:o.gl,ub:(g.ub&&a[9]!=null?g.ub[a[9]]:''),eq:/MONTACARGA/.test(c)||/MONTACARGA|KALMAR/.test(o.t)?'Montacargas':'Móviles'}});
  GXO=(g.ot||[]).map(a=>{const u=g.un[a[1]],o=info(u),c=g.cu[a[2]];return{p:pe[a[0]],u,c,pv:g.pv[a[3]],sb:g.sb[a[4]],k:TPC[a[5]],no:g.no[a[6]],sis:sisOf(c),z:o.z,t:o.t,mo:o.mo,mat:o.mat,gl:o.gl}});
  FL.forEach(f=>{const o=info(String(f.e).trim().toUpperCase());INV.all++;INV.z.set(o.z,(INV.z.get(o.z)||0)+1);INV.t.set(o.t,(INV.t.get(o.t)||0)+1)});
  const ps=pe.slice().sort(),cnt=g.nr||{},last=ps[ps.length-1],prev=ps.slice(-4,-1).map(p=>cnt[p]||0).sort((a,b)=>a-b),med=prev.length?prev[prev.length>>1]:0,parc=new Set();
@@ -1838,11 +1838,11 @@ function gxBuild(){GX=null;GXR=[];GXO=[];UI=new Map();INV={z:new Map(),t:new Map
  GX={pe:ps,parc,g,full:ps.filter(p=>!parc.has(p))};
  if(!S.gd||!ps.includes(S.gd)||!ps.includes(S.gh))gxDefaults();
 }
-function gxDefaults(){const ps=GX.pe,last=ps[ps.length-1];S.gh=last;S.gd=ps.find(p=>p>=last.slice(0,4)+'-01')||ps[0];S.gcl='T';S.gz='';S.gt2='';S.gmo='';S.gmz=true;S.gcu='';S.gst=0;S.gcm='mes';S.gA='';S.gB='';S.gdim='z';S.gpath=[]}
+function gxDefaults(){const ps=GX.pe,last=ps[ps.length-1];S.gh=last;S.gd=ps.find(p=>p>=last.slice(0,4)+'-01')||ps[0];S.gcl='T';S.gz='';S.gt2='';S.gmo='';S.gmz=true;S.gcu='';S.gub='';S.gst=0;S.gcm='mes';S.gA='';S.gB='';S.gdim='z';S.gpath=[]}
 const _ing=window.ingest;window.ingest=function(){const r=_ing.apply(this,arguments);try{gxBuild()}catch(e){console.warn('gx',e)}return r};
 
 /* ---------- filtros y agregaciones ---------- */
-function sel(A,o){o=o||{};const a=S.gd,b=S.gh,cl=S.gcl;return A.filter(r=>(o.per||(r.p>=a&&r.p<=b))&&(o.nocls||cl==='T'||(cl==='PC'?r.k!=='S':r.k===cl))&&(S.pxgl!==false||!r.gl)&&(o.allmat||S.gmz||!r.mat)&&(o.nozone||!S.gz||r.z===S.gz)&&(!S.gt2||r.t===S.gt2)&&(!S.gmo||r.mo===S.gmo)&&(o.nocu||!S.gcu||r.c===S.gcu))}
+function sel(A,o){o=o||{};const a=S.gd,b=S.gh,cl=S.gcl;return A.filter(r=>(o.per||(r.p>=a&&r.p<=b))&&(o.nocls||cl==='T'||(cl==='PC'?r.k!=='S':r.k===cl))&&(S.pxgl!==false||!r.gl)&&(o.allmat||S.gmz||!r.mat)&&(o.nozone||!S.gz||r.z===S.gz)&&(!S.gt2||r.t===S.gt2)&&(!S.gmo||r.mo===S.gmo)&&(!S.gub||r.ub===S.gub)&&(o.nocu||!S.gcu||r.c===S.gcu))}
 function agg(rs,kf){const m=new Map();rs.forEach(r=>{const k=kf(r);let o=m.get(k);if(!o)m.set(k,o={k,m:0,P:0,C:0,S:0,n:0,u:new Set()});o.m+=r.m;o[r.k]+=r.m;o.n+=r.n;if(!r.mat)o.u.add(r.u)});return[...m.values()]}
 const tot=rs=>{let m=0,P=0,C=0,S2=0;rs.forEach(r=>{m+=r.m;if(r.k==='P')P+=r.m;else if(r.k==='C')C+=r.m;else S2+=r.m});return{m,P,C,S:S2}};
 const per=()=>GX.pe.filter(p=>p>=S.gd&&p<=S.gh);
@@ -1910,7 +1910,7 @@ function bar(){const opt=v=>GX.pe.map(p=>`<option value="${p}" ${p===v?'selected
  const seg=(k,items)=>`<div class="gxsg">${items.map(([v,l,t])=>`<button type="button" class="${S[k]===v?'on':''}" onclick="gxSet('${k}','${v}')"${t?` title="${t}"`:''}>${l}</button>`).join('')}</div>`;
  const ps=GX.pe,f=GX.full,last=ps[ps.length-1],rg=m=>{if(m==='y')return[ps.find(p=>p>=last.slice(0,4)+'-01')||ps[0],last];if(m==='all')return[ps[0],last];const n=+m,ix=Math.max(0,f.length-n);return[f[ix],f[f.length-1]]};
  const rb=(m,l)=>{const r=rg(m);return`<button type="button" class="${S.gd===r[0]&&S.gh===r[1]?'on':''}" onclick="gxRange('${m}')">${l}</button>`};
- const nAct=[S.gz,S.gt2,S.gmo,S.gcu].filter(Boolean).length+(S.gcl!=='T'?1:0)+(!S.gmz?1:0);
+ const nAct=[S.gz,S.gt2,S.gmo,S.gcu,S.gub].filter(Boolean).length+(S.gcl!=='T'?1:0)+(!S.gmz?1:0);
  return `<div class="gxf"><div class="gxfh"><div class="gxft"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg><b>Filtros</b>${nAct?`<em>${nAct} activo${nAct>1?'s':''}</em>`:'<em class="z">Sin filtros</em>'}</div>${nAct?'<button type="button" class="gxfc" onclick="gxClear()">Limpiar filtros</button>':''}</div>
  <div class="gxfg">
   ${fld('Periodo · desde',`<select onchange="gxSet('gd',this.value)">${opt(S.gd)}</select>`)}
@@ -1923,6 +1923,7 @@ function bar(){const opt=v=>GX.pe.map(p=>`<option value="${p}" ${p===v?'selected
  <div class="gxfr">
   <div class="gxfk"><span>Atajos de periodo</span><div class="gxsg">${rb('1','Último mes')}${rb('3','3 meses')}${rb('6','6 meses')}${rb('y','Año en curso')}${rb('all','Todo')}</div></div>
   <div class="gxfk"><span>Tipo de gasto</span>${seg('gcl',[['T','Todos'],['P','Preventivo'],['C','Correctivo'],['PC','Prev. + Corr.','Excluye lo que no tiene orden de trabajo (urea, accesorios, etc.)'],['S','Sin OT']])}</div>
+  <div class="gxfk"><span>Unidad de negocio</span>${GX.g.ub&&GX.g.ub.some(Boolean)?`<div class="gxsg">${[['','Ambas'],...GX.g.ub.filter(Boolean).sort().map(v=>[v,String(v).replace(/^\d+\s*/,'').toLowerCase().replace(/^./,x=>x.toUpperCase())])].map(([v,l])=>`<button type="button" class="${(S.gub||'')===v?'on':''}" onclick="gxSet('gub','${v}')">${l}</button>`).join('')}</div>`:'<span class="note" style="text-transform:none;letter-spacing:0;font-weight:400">Vuelve a cargar los Excel de gasto para habilitar este filtro</span>'}</div>
   <div class="gxfk"><span>Gasto sin unidad</span><button type="button" class="gxsw ${S.gmz?'on':''}" onclick="gxSet('gmz',${!S.gmz})" title="Gasto sin unidad = movimientos cuya columna Unidad viene vacía o dice TALLER en el Excel; no se pueden ligar a un económico"><i></i><b>${S.gmz?'Incluidos':'Excluidos'}</b></button></div>
  </div>
  <div class="gxff">Preventivo y correctivo se determinan por el nombre de la cuenta contable y, si no lo dice, por la orden de trabajo. Toca cualquier cifra o gráfica para ver de qué se compone.</div></div>`}
@@ -2162,8 +2163,9 @@ const _t0=FN[0];FN[0]=function(){let h=_t0();try{const s=sum2(),B=window.npB&&wi
 
 /* ---------- Excel y presentación ---------- */
 /* ---- libro completo, a detalle ---- */
+const ubL=v=>String(v||'').replace(/^\d+\s*/,'').toLowerCase().replace(/^./,x=>x.toUpperCase());
 function gxCtx(){const rs=sel(GXR),ps=per(),T=tot(rs),by=new Map(agg(rs,r=>r.p).map(o=>[o.k,o])),pf=(S.pxgl===false?'SIN PXGL':'CON PXGL'),clN={T:'Todos',P:'Preventivo',C:'Correctivo',PC:'Prev. + Corr.',S:'Sin OT'}[S.gcl]||'Todos',
- sub='Periodo '+pl(S.gd)+' a '+pl(S.gh)+' · '+clN+' · Región: '+(S.gz||'Todas')+' · '+pf+' · Corte '+S.corte;return{rs,ps,T,by,pf,clN,sub}}
+ sub='Periodo '+pl(S.gd)+' a '+pl(S.gh)+' · '+clN+' · Región: '+(S.gz||'Todas')+(S.gub?' · '+ubL(S.gub):'')+' · '+pf+' · Corte '+S.corte;return{rs,ps,T,by,pf,clN,sub}}
 const pct=(a,b)=>b?a/b:0,LBL=p=>pl(p)+(GX.parc.has(p)?'*':'');
 function pivot(rs,kf,ps,order){const m=new Map();rs.forEach(r=>{const k=kf(r);let o=m.get(k);if(!o)m.set(k,o={k,t:0,p:{}});o.t+=r.m;o.p[r.p]=(o.p[r.p]||0)+r.m});let L=[...m.values()];L=order?order(L):L.sort((a,b)=>b.t-a.t);return L.map(o=>[o.k,...ps.map(p=>o.p[p]||0),o.t])}
 const pcols=ps=>ps.map(p=>({h:LBL(p),t:'$',w:13}));
@@ -2182,7 +2184,7 @@ function gxSheetsFull(C,tabExtra){const {rs,ps,T,by,pf,clN,sub}=C,X=window.XW,sh
   {sec:'Indicadores clave',kpis:[{l:'Gasto total',v:T.m,t:'$'},{l:'Correctivo',v:T.C,t:'$',c:'C0392B'},{l:'Preventivo',v:T.P,t:'$',c:'1E8449'},{l:'% correctivo',v:pct(T.C,T.m),t:'%',c:'C0392B'},{l:'Sin OT',v:T.S,t:'$'},{l:'Unidades con gasto',v:us.length,t:'n'},{l:'Gasto promedio por unidad',v:us.length?T.m/us.length:0,t:'$'},{l:'Movimientos',v:rs.reduce((a,r)=>a+r.n,0),t:'n'},{l:'Unidades Crítico / Problema',v:crit+' / '+prob,t:'s'},{l:'Variación último mes'+(GX.parc.has(ult)?' (parcial)':''),v:dv==null?'n/d':(dv>=0?'▲ ':'▼ ')+Math.abs(dv*100).toFixed(1)+'%',t:'s',c:dv>0?'C0392B':'1E8449'},{l:'Gasto sin unidad',v:sum(rs.filter(r=>r.mat),r=>r.m),t:'$'},{l:'Gasto sin región',v:sum(rs.filter(r=>/SIN REGI/.test(r.z||'')),r=>r.m),t:'$'}]},
   {sec:'Lectura ejecutiva',lines:ln},
   {sec:'Contenido del libro',lines:['Mensual · Mensual por clase · Regiones · Región por mes · Región por clase · Cuentas · Cuenta por mes · Sistemas · Tipo de unidad · Tipo por mes · Proveedores · Proveedor por mes · Unidades (con meses, evaluación y estatus) · Evaluación móviles · Sin gasto · Detalle de movimientos.']},
-  {sec:'Filtros y parámetros',pairs:[['Periodo',pl(S.gd)+' a '+pl(S.gh)],['Tipo de gasto',clN],['Incluye gasto sin unidad',S.gmz?'Sí':'No'],['Región',S.gz||'Todas'],['Tipo de unidad',S.gt2||'Todos'],['Modelo',S.gmo||'Todos'],['Cuenta',S.gcu||'Todas'],['Considerar PXGL',pf],['Fecha de corte',S.corte],['Generado por',WHO+' (Paquetín)'],['Preventivo / correctivo','Se toma del nombre de la cuenta (PREV / CORRECTIV) y, si no lo dice, del Tipo de OT; sin OT se muestra aparte.'],['Meses parciales','Los meses marcados con * aún no tienen el mes completo cargado.'],['Puntaje de evaluación','0 a 100 por percentil: 25% gasto, 20% costo por día operado, 20% días detenida, 15% veces detenida, 10% repetición de falla, 10% contra la mediana del tipo.'],['Unidades fuera de inventario','Conservan su última región, tipo y modelo conocidos.']]}]}));
+  {sec:'Filtros y parámetros',pairs:[['Periodo',pl(S.gd)+' a '+pl(S.gh)],['Tipo de gasto',clN],['Incluye gasto sin unidad',S.gmz?'Sí':'No'],['Región',S.gz||'Todas'],['Tipo de unidad',S.gt2||'Todos'],['Modelo',S.gmo||'Todos'],['Cuenta',S.gcu||'Todas'],['Unidad de negocio',S.gub?ubL(S.gub):'Ambas'],['Considerar PXGL',pf],['Fecha de corte',S.corte],['Generado por',WHO+' (Paquetín)'],['Preventivo / correctivo','Se toma del nombre de la cuenta (PREV / CORRECTIV) y, si no lo dice, del Tipo de OT; sin OT se muestra aparte.'],['Meses parciales','Los meses marcados con * aún no tienen el mes completo cargado.'],['Puntaje de evaluación','0 a 100 por percentil: 25% gasto, 20% costo por día operado, 20% días detenida, 15% veces detenida, 10% repetición de falla, 10% contra la mediana del tipo.'],['Unidades fuera de inventario','Conservan su última región, tipo y modelo conocidos.']]}]}));
  let ac=0,prev=null;
  sh.push(X.table({name:'Mensual',title:'Gasto por mes',sub,cols:[{h:'Periodo',w:16},{h:'Preventivo',t:'$',w:15},{h:'Correctivo',t:'$',w:15},{h:'Sin OT',t:'$',w:14},{h:'Total',t:'$',w:15},{h:'% correctivo',t:'%',w:11},{h:'Var. vs mes anterior $',t:'$',w:16},{h:'Var. vs mes anterior %',t:'%',w:14},{h:'Acumulado',t:'$',w:16},{h:'Unidades con gasto',t:'n',w:12},{h:'Movimientos',t:'n',w:12},{h:'Gasto por unidad',t:'$',w:14}],
   rows:ps.map(p=>{const o=by.get(p)||{P:0,C:0,S:0,m:0,n:0},u=new Set(rs.filter(r=>r.p===p&&!r.mat).map(r=>r.u)).size;ac+=o.m;const d=prev==null?'':o.m-prev,dp=prev?(o.m-prev)/prev:'';prev=o.m;return[LBL(p),o.P,o.C,o.S,o.m,pct(o.C,o.m),d,dp,ac,u,o.n,u?o.m/u:0]}),total:['Total',T.P,T.C,T.S,T.m,pct(T.C,T.m),'','','',us.length,rs.reduce((a,r)=>a+r.n,0),us.length?T.m/us.length:0],note:'* mes parcial: aún no tiene el mes completo cargado.'}));
@@ -2253,11 +2255,11 @@ const hdrIx=(a,names)=>{for(let h=0;h<Math.min(12,a.length);h++){const r=(a[h]||
 const TPI={'PREVENTIVA':1,'CORRECTIVA':2};
 async function gxRead(f,buf){const wb0=XLSX.read(buf,{type:'array',bookSheets:true}),sn=wb0.SheetNames.find(n=>/^detalle$/i.test(n));
  const ws=XLSX.read(buf,{type:'array',sheets:[sn]}).Sheets[sn],a=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
- const H=hdrIx(a,{per:['PERIODO'],cta:['NOMBRE CUENTA'],uni:['UNIDAD'],dsc:['DESCRIPCION UNIDAD'],pro:['PROVEEDOR'],ot:['OT'],mon:['MONTO'],nod:['NOMBRE NODO'],sub:['SUBTIPO OT'],tip:['TIPO OT']});if(!H)throw new Error('No encontré las columnas Periodo / Nombre cuenta / Monto en “Detalle” de '+f.name);
+ const H=hdrIx(a,{per:['PERIODO'],cta:['NOMBRE CUENTA'],uni:['UNIDAD'],dsc:['DESCRIPCION UNIDAD'],pro:['PROVEEDOR'],ot:['OT'],mon:['MONTO'],nod:['NOMBRE NODO'],sub:['SUBTIPO OT'],tip:['TIPO OT'],ub:['UNIDAD DE NEGOCIO']});if(!H)throw new Error('No encontré las columnas Periodo / Nombre cuenta / Monto en “Detalle” de '+f.name);
  const {ix}=H,R0=new Map(),OT=new Map(),nr={},ds={};let n=0;const gv=(w,j)=>j>=0&&w[j]!=null?nz(w[j]):'';
  for(let i=H.h+1;i<a.length;i++){const w=a[i];if(!w)continue;let p=w[ix.per];if(p instanceof Date)p=p.toISOString().slice(0,7);p=String(p==null?'':p).trim();if(!/^\d{4}-\d{2}/.test(p))continue;p=p.slice(0,7);
-  const m=Number(w[ix.mon]);if(!isFinite(m))continue;const cn=gv(w,ix.cta)||'SIN CUENTA',u=ix.uni>=0&&w[ix.uni]!=null?String(w[ix.uni]).trim().toUpperCase():'',pv=gv(w,ix.pro)||'SIN PROVEEDOR',no=gv(w,ix.nod)||'SIN ENTIDAD',sb=gv(w,ix.sub),tp=TPI[gv(w,ix.tip)]||0,k=[p,u,cn,pv,no,sb,tp].join('|');
-  let o=R0.get(k);if(!o)R0.set(k,o=[p,u,cn,pv,no,sb,tp,0,0]);o[7]+=m;o[8]++;nr[p]=(nr[p]||0)+1;n++;
+  const m=Number(w[ix.mon]);if(!isFinite(m))continue;const cn=gv(w,ix.cta)||'SIN CUENTA',u=ix.uni>=0&&w[ix.uni]!=null?String(w[ix.uni]).trim().toUpperCase():'',pv=gv(w,ix.pro)||'SIN PROVEEDOR',no=gv(w,ix.nod)||'SIN ENTIDAD',sb=gv(w,ix.sub),tp=TPI[gv(w,ix.tip)]||0,ub=gv(w,ix.ub),k=[p,u,cn,pv,no,sb,tp,ub].join('|');
+  let o=R0.get(k);if(!o)R0.set(k,o=[p,u,cn,pv,no,sb,tp,0,0,ub]);o[7]+=m;o[8]++;nr[p]=(nr[p]||0)+1;n++;
   if(u&&ix.dsc>=0&&w[ix.dsc]&&!ds[u])ds[u]=nz(w[ix.dsc]);
   if(ix.ot>=0&&w[ix.ot]!=null&&u){const cl=clsName(cn)||TPC[tp];if(cl==='C'||cl==='P'){const ko=p+'|'+u+'|'+String(w[ix.ot]).trim();if(!OT.has(ko))OT.set(ko,[p,u,cn,pv,sb,cl,no])}}}
  if(!n)throw new Error('No se encontraron movimientos con periodo válido en '+f.name);
@@ -2265,14 +2267,14 @@ async function gxRead(f,buf){const wb0=XLSX.read(buf,{type:'array',bookSheets:tr
 function gxMerge(nw,fname){const old=D.gx&&D.gx.v===2?D.gx:null,keep=[],kot=[],nr={},ds={};let rep=0,kept=0,add2=0;const take=new Set();
  Object.keys(nw.nr).forEach(p=>{const prev=old&&old.nr?old.nr[p]:0;if(!prev){take.add(p);add2++}else if(nw.nr[p]>=prev){take.add(p);rep++}else kept++});
  if(old){const dd0=old.ds||[];old.un.forEach((u,i)=>{if(dd0[i])ds[u]=dd0[i]});Object.keys(old.nr||{}).forEach(p=>{if(!take.has(p))nr[p]=old.nr[p]});
-  old.r.forEach(a=>{const p=old.pe[a[0]];if(!take.has(p))keep.push([p,old.un[a[1]],old.cu[a[2]],old.pv[a[3]],old.no[a[4]],old.sb[a[5]],a[6],a[7],a[8]])});(old.ot||[]).forEach(a=>{const p=old.pe[a[0]];if(!take.has(p))kot.push([p,old.un[a[1]],old.cu[a[2]],old.pv[a[3]],old.sb[a[4]],TPC[a[5]],old.no[a[6]]])})}
+  old.r.forEach(a=>{const p=old.pe[a[0]];if(!take.has(p))keep.push([p,old.un[a[1]],old.cu[a[2]],old.pv[a[3]],old.no[a[4]],old.sb[a[5]],a[6],a[7],a[8],(old.ub&&a[9]!=null?old.ub[a[9]]:'')])});(old.ot||[]).forEach(a=>{const p=old.pe[a[0]];if(!take.has(p))kot.push([p,old.un[a[1]],old.cu[a[2]],old.pv[a[3]],old.sb[a[4]],TPC[a[5]],old.no[a[6]]])})}
  Object.keys(nw.ds).forEach(u=>{ds[u]=nw.ds[u]});
  const R2=keep.concat(nw.rows.filter(r=>take.has(r[0]))),O2=kot.concat(nw.ot.filter(r=>take.has(r[0])));take.forEach(p=>{nr[p]=nw.nr[p]});
  const idx=a=>{const m=new Map();a.forEach(v=>{if(!m.has(v))m.set(v,m.size)});return m};
  const pe=[...new Set(R2.map(r=>r[0]))].sort(),pM=new Map(pe.map((p,i)=>[p,i])),cuM=idx(R2.map(r=>r[2]).concat(O2.map(r=>r[2]))),unM=idx(R2.map(r=>r[1]).concat(O2.map(r=>r[1]))),pvM=idx(R2.map(r=>r[3]).concat(O2.map(r=>r[3]))),noM=idx(R2.map(r=>r[4]).concat(O2.map(r=>r[6]))),sbM=idx(R2.map(r=>r[5]).concat(O2.map(r=>r[4])));
- const CI={S:0,P:1,C:2};
+ const CI={S:0,P:1,C:2},ubM=idx(R2.map(r=>r[9]||''));
  D.gx={v:2,id:(old&&old.id)||{},pe,cu:[...cuM.keys()],un:[...unM.keys()],pv:[...pvM.keys()],no:[...noM.keys()],sb:[...sbM.keys()],ds:[...unM.keys()].map(u=>ds[u]||''),
-  r:R2.map(r=>[pM.get(r[0]),unM.get(r[1]),cuM.get(r[2]),pvM.get(r[3]),noM.get(r[4]),sbM.get(r[5]),r[6],Math.round(r[7]),r[8]]),
+  ub:[...ubM.keys()],r:R2.map(r=>[pM.get(r[0]),unM.get(r[1]),cuM.get(r[2]),pvM.get(r[3]),noM.get(r[4]),sbM.get(r[5]),r[6],Math.round(r[7]),r[8],ubM.get(r[9]||'')]),
   ot:O2.map(r=>[pM.get(r[0]),unM.get(r[1]),cuM.get(r[2]),pvM.get(r[3]),sbM.get(r[4]),CI[r[5]],noM.get(r[6])]),nr,
   meta:{files:((old&&old.meta&&old.meta.files)||[]).concat([fname]).slice(-6),gen:new Date().toLocaleString('es-MX')}};
  return `Gastos ✔ (${add2} meses nuevos${rep?`, ${rep} actualizados`:''}${kept?`, ${kept} conservados por tener más movimientos`:''} · ${pe[0]} a ${pe[pe.length-1]})`}
