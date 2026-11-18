@@ -1533,7 +1533,139 @@ window.usAdd=async function(){try{if(ROLE!=='admin'||!RAWK)return say('Entra com
  const st=document.getElementById('pst');if(st)st.textContent='👤 Usuario nuevo pendiente: genera y sube data.enc.json';
 }catch(e){say('No se pudo agregar: '+(e.message||e),'e')}};
 })();
-</script><script>/* ===== Bloque de GASTOS de mantenimiento · Logística (v2: por región, estilo Operaciones) ===== */
+</script><script>/* ===== INVENTARIO ordenado (Paquetexpress / PXGL) + botón CONSIDERAR PXGL ===== */
+(function(){
+const nz=s=>String(s==null?'':s).replace(/\s+/g,' ').trim().toUpperCase();
+const nrm=v=>nz(v).normalize('NFD').replace(/[̀-ͯ]/g,'');
+const nid=s=>{const t=nz(s),m=/^(PXM?)0*(\d+)$/.exec(t);return m?m[1]+m[2]:t};
+const $g=id=>document.getElementById(id);
+const fm=n=>Math.round(n).toLocaleString('es-MX');
+let PXS=new Set(),INVR=null;window.PXS=PXS;
+const vMap=v=>{v=nz(v);return /^TRACTO/.test(v)?'TRACTOCAMIÓN':/^REMOLQ/.test(v)?'REMOLQUE':/^DOLLY/.test(v)?'DOLLY':v||'OTRO'};
+const idOk=v=>v!=null&&/^[A-Z0-9][A-Z0-9\-\.]{0,13}$/i.test(String(v).trim())&&nz(v)!=='PGL';
+
+/* ---------- lectura de los Excel de inventario ---------- */
+function hdr(a){for(let h=0;h<Math.min(10,a.length);h++){const r=(a[h]||[]).map(nrm);const id=r.findIndex(v=>/^NO\.? ?ECO/.test(v)&&!/ANTERIOR/.test(v));if(id>=0&&r.some(v=>/^(MARCA|VEHICULO)$/.test(v))){const f=re=>r.findIndex(v=>re.test(v));return{h,c:{id,ant:f(/ANTERIOR/),pl:f(/^PLACAS?$/),v:f(/^VEHICULO$/),ma:f(/^MARCA$/),sb:f(/^SUB.?MARCA$/),mo:f(/^MODELO$/),nm:f(/^NO\.? ?(DE )?MOTOR$/),tm:f(/^(TIPO DE MOTOR|MOTOR)$/),sr:f(/SERIE/),pi:f(/^(DESCRIPCION \(PIES\)|MEDIDA)$/),su:f(/^SUSPENSION$/),es:f(/^ESTADO$/),tp:f(/^(TIPO|TIPO DE LANZA)$/)}}}}return null}
+function rowsOf(a,H,hoja,defV){const g=(w,j)=>j>=0&&w[j]!=null&&String(w[j]).trim()!==''&&String(w[j]).trim()!=='*'?w[j]:null,out=[];
+ for(let i=H.h+1;i<a.length;i++){const w=a[i];if(!w||!idOk(w[H.c.id]))continue;const c=H.c,ant=g(w,c.ant);
+  out.push({e:String(w[c.id]).trim().toUpperCase(),a:ant==null?'':String(ant).trim().toUpperCase(),pl:String(g(w,c.pl)||''),v:(()=>{const v=vMap(g(w,c.v)||defV);return defV&&!['TRACTOCAMIÓN','REMOLQUE','DOLLY','RABON','TORTON','PORTACONTENEDOR'].includes(v)?vMap(defV):v})(),ma:nz(g(w,c.ma)),sb:nz(g(w,c.sb)),mo:g(w,c.mo)==null?'':String(g(w,c.mo)).trim(),nm:String(g(w,c.nm)||''),tm:nz(g(w,c.tm)),sr:nz(g(w,c.sr)),pi:g(w,c.pi)==null?'':String(g(w,c.pi)).replace(/[^0-9]/g,''),su:nrm(g(w,c.su)),es:nz(g(w,c.es))||'ACTIVO',tp:nz(g(w,c.tp)),h:hoja})}
+ return out}
+function invRead(wb){const px=[],gl=[],bj=[],names=wb.SheetNames,hasPX=names.some(n=>/^tractos$/i.test(n));
+ names.forEach(n=>{const k=nrm(n);let ent=null,defV='';
+  if(/^(TRACTOS|REMOLQUES|DOLLYS)$/.test(k)){ent='PX';defV=k==='TRACTOS'?'TRACTO':k==='REMOLQUES'?'REMOLQUE':'DOLLY'}
+  else if(/^(PGL |DOLLY PGL|PXGL)/.test(k)){ent='GL';defV=/TRACTOS/.test(k)?'TRACTO':/REMOLQ/.test(k)?'REMOLQUE':/DOLLY/.test(k)?'DOLLY':''}
+  else if(k==='BAJAS')ent='BJ';
+  else if(!hasPX&&!/^(REVISION|FER|PORTADA)/.test(k))ent='GL';
+  if(!ent)return;const a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null,raw:true}),H=hdr(a);if(!H)return;const rs=rowsOf(a,H,n,defV);
+  if(ent==='PX')px.push(...rs);else if(ent==='GL')gl.push(...rs);else rs.forEach(r=>bj.push([r.e,r.a,r.v,r.ma,r.mo,r.sr]))});
+ return{px,gl,bj,hasPX}}
+function glDedupe(list){const m=new Map(),ix=new Map();list.forEach(r=>{const keys=[r.sr&&r.sr.length>6?'S'+r.sr:'',...[r.e,r.a].filter(Boolean).map(x=>'I'+nid(x))].filter(Boolean);let o=null;for(const k of keys){if(ix.has(k)){o=ix.get(k);break}}
+  if(!o){o={...r,al:[]};m.set(m.size,o)}
+  [r.e,r.a].filter(Boolean).forEach(x=>{if(!o.al.includes(x))o.al.push(x)});if(!o.sr&&r.sr)o.sr=r.sr;
+  // la id principal es la de la flota PXGL (PXM...) cuando existe
+  if(/^PXM/.test(r.e)&&!/^PXM/.test(o.e)){o.e=r.e}
+  ['pl','ma','sb','mo','tm','pi','su','tp'].forEach(f=>{if(!o[f]&&r[f])o[f]=r[f]});
+  o.al.forEach(x=>ix.set('I'+nid(x),o));if(o.sr&&o.sr.length>6)ix.set('S'+o.sr,o)});
+ return[...m.values()].map(o=>{o.al=o.al.filter(x=>x!==o.e);return o})}
+
+/* ---------- aplicar inventario a la Flota del portal ---------- */
+const hasGl=()=>S.pxgl!==false;
+function invPre(){const I=D&&D.inv;if(!I||!I.px||!D.mm)return;const key=r=>r.ma+'|'+r.sb+'|'+r.tm,cnt=new Map();
+ I.px.filter(r=>r.v==='TRACTOCAMIÓN'||r.v==='RABON'||r.h==='TRACTOS').forEach(r=>{const t=D.mm[nz(r.e)];if(t&&!/^marca sub/i.test(t)){const k=key(r);let o=cnt.get(k);if(!o)cnt.set(k,o=new Map());o.set(t,(o.get(t)||0)+1)}});
+ const best=new Map([...cnt].map(([k,m])=>[k,[...m].sort((a,b)=>b[1]-a[1])[0][0]]));let n=0;
+ const add=r=>{const id=nz(r.e);if(D.mm[id]&&!/^marca sub/i.test(D.mm[id]))return;const t=best.get(key(r));if(t){D.mm[id]=t;n++}};
+ I.px.filter(r=>r.h==='TRACTOS').forEach(add);(I.gl||[]).filter(r=>r.v==='TRACTOCAMIÓN').forEach(r=>{add(r);(r.al||[]).forEach(x=>add({...r,e:x}))})}
+function descC(r){return r.v==='REMOLQUE'?('REMOLQUE'+(r.pi?' '+r.pi:'')):r.v==='DOLLY'?'DOLLY':(r.tp||'')}
+function invPost(){INVR={bajasEnFlota:[],sinFlota:[],soloFlota:[],sinRegion:[]};const I=D&&D.inv;
+ const old=FL.slice(),byId=new Map(old.map(f=>[nz(f.e),f])),gs=new Set();PXS=new Set();window.PXS=PXS;
+ if(I){const bj=new Set();(I.bj||[]).forEach(b=>{if(b[0])bj.add(nz(b[0]));if(b[1])bj.add(nz(b[1]))});
+  const px=new Set(),nf=[],seen=new Set();
+  (I.px||[]).forEach(r=>{const id=nz(r.e);px.add(id);if(r.a)px.add(nz(r.a));seen.add(id);const o=byId.get(id);
+   if(o){o.inv=r;nf.push(o)}else{const f={e:r.e,v:r.v,s:r.es||'ACTIVO',r:null,u:null,c:descC(r),mo:r.mo,ma:r.ma,inv:r,nuevo:1};nf.push(f);INVR.sinFlota.push(f)}});
+  old.forEach(f=>{const id=nz(f.e);if(seen.has(id))return;if(bj.has(id)){INVR.bajasEnFlota.push(f);return}nf.push(f);f.soloFlota=1;INVR.soloFlota.push(f)});
+  const gm=new Map();
+  (I.gl||[]).forEach(r=>{const ids=[r.e,...(r.al||[])];ids.forEach(x=>PXS.add(nid(x)));let f=null;for(const x of ids){const o=byId.get(nz(x));if(o){f=o;break}}
+   if(!f){f={e:r.e,v:r.v,s:r.es||'ACTIVO',r:'PXGL',u:null,c:descC(r),mo:r.mo,ma:r.ma,inv:r,nuevo:1};nf.push(f);INVR.sinFlota.push(f)}else{f.inv=r;if(!f.r||nz(f.r)!=='PXGL')f.r='PXGL'}
+   f.gl=1;f.al=ids;ids.forEach(x=>gm.set(nz(x),f))});
+  window.FLALL=nf;FL=nf;FLM=new Map(FL.map(f=>[nz(f.e),f]));gm.forEach((f,k)=>{if(!FLM.has(k))FLM.set(k,f)});
+  INVR.sinRegion=FL.filter(f=>f.inv&&!f.gl&&!f.r)}
+ // PXGL por región (Flota o Seguimiento)
+ FL.forEach(f=>{if(f.r&&nz(f.r)==='PXGL'){f.gl=1;PXS.add(nid(f.e))}else if(PXS.has(nid(f.e)))f.gl=1});
+ SEG.forEach(x=>{if(x.reg==='PXGL')PXS.add(nid(x.e))});
+ // ids de Seguimiento con otro formato (PX0102 vs PX00102)
+ const byN=new Map();FL.forEach(f=>{if(f.gl)byN.set(nid(f.e),f);(f.al||[]).forEach(a=>byN.set(nid(a),f))});
+ SEG.forEach(x=>{let f=FLM.get(nz(x.e));if(!f){f=byN.get(nid(x.e));if(f)FLM.set(nz(x.e),f)}
+  x.f=f;x.reg=(f&&f.r)?cr(f.r):(cr(x.r)||'SIN REGIÓN');x.g=x.tr?mg(x.e):(f?gF(f):(cr(x.t)||'OTRO'));x.gl=PXS.has(nid(x.e))||x.reg==='PXGL'||!!(f&&f.gl)});
+ window.FLALL=FL.slice();
+ if(!hasGl()){FL=FL.filter(f=>!f.gl);SEG=SEG.filter(x=>!x.gl);FLM=new Map(FL.map(f=>[nz(f.e),f]))}}
+const _ing=window.ingest;window.ingest=function(){const f=S.from,t=S.to,c=S.corte;try{invPre()}catch(e){console.warn('inv pre',e)}
+ const r=_ing.apply(this,arguments);try{invPost()}catch(e){console.warn('inv post',e)}
+ if(c&&(S.from||S.to)){/* conserva el rango elegido al prender/apagar PXGL */}return r};
+try{const v=localStorage.getItem('px_gl');if(v==='0')S.pxgl=false}catch(_){}
+
+/* ---------- botón CONSIDERAR PXGL ---------- */
+function pxUI(){let b=$g('pxg');if(!b){const nav=$g('nav');if(!nav||!nav.parentNode)return;b=document.createElement('div');b.id='pxg';nav.parentNode.insertBefore(b,nav)}
+ const on=hasGl();b.innerHTML=`<button class="pxt ${on?'on':'off'}" onclick="pxTog()" title="Prende o apaga PXGL en TODOS los indicadores del portal (Flota, detenciones, Up Time, gastos, etc.)"><span class="pxs"><i></i></span><span class="pxl"><b>CONSIDERAR PXGL</b><small>${on?'Con PXGL · todos los indicadores':'Sin PXGL · se excluye de todo'}</small></span></button>`}
+window.pxTog=function(){S.pxgl=!hasGl();try{localStorage.setItem('px_gl',S.pxgl?'1':'0')}catch(_){}const f=S.from,t=S.to,c=S.corte;try{ingest()}catch(e){console.warn(e)}if(f){S.from=f;S.to=t;S.corte=c}pxUI();R()};
+const _R=window.R;window.R=function(){const r=_R.apply(this,arguments);try{pxUI();const ph=document.querySelector('.ph');if(ph){ph.querySelectorAll('.pxb').forEach(e=>e.remove());ph.insertAdjacentHTML('beforeend',`<span class="pxb ${hasGl()?'on':'off'}">${hasGl()?'CON PXGL':'SIN PXGL'}</span>`)}}catch(_){}return r};
+
+/* ---------- carga de archivos ---------- */
+const _lf=window.loadFiles;window.loadFiles=async function(fs){fs=[...fs];const rest=[],out=[];
+ for(const f of fs){let done=false;try{const buf=await f.arrayBuffer(),wb0=XLSX.read(buf,{type:'array',bookSheets:true}),nm=wb0.SheetNames,isInv=nm.some(n=>/^tractos$/i.test(n))&&nm.some(n=>/^remolques$/i.test(n)),isGl=!isInv&&nm.length<=3&&!nm.some(n=>/^(seguimiento|detalle)$/i.test(n)||/flota\s*log/i.test(n));
+   if(isInv||isGl){const wb=XLSX.read(buf,{type:'array'}),r=invRead(wb);if(isGl&&!r.gl.length)throw new Error('No reconocí las columnas de inventario en '+f.name);
+    const old=D.inv||{px:[],gl:[],bj:[],meta:{files:[]}};
+    D.inv={v:1,px:r.hasPX?r.px:old.px,gl:glDedupe((old.gl||[]).concat(r.gl)),bj:r.bj.length?r.bj:old.bj||[],meta:{files:((old.meta&&old.meta.files)||[]).concat([f.name]).slice(-6),gen:new Date().toLocaleString('es-MX')}};
+    out.push(`Inventario ✔ (${f.name}: ${r.hasPX?r.px.length+' Paquetexpress · ':''}${D.inv.gl.length} PXGL${r.bj.length?' · '+r.bj.length+' bajas':''})`);done=true}
+  }catch(e){out.push('Error en '+f.name+': '+(e.message||e));done=true}
+  if(!done)rest.push(f)}
+ if(rest.length){await _lf(rest);if(out.length){try{ingest()}catch(e){console.warn(e)}msg=out.join(' · ')+' · '+msg;R()}}
+ else{try{ingest()}catch(e){console.warn(e)}msg='Cargado: '+out.join(' · ');R()}
+ const fi=$g('fi');if(fi)try{fi.value=''}catch(_){}};
+
+/* ---------- pestaña Inventario ---------- */
+const nvm=(t,html)=>{let m=$g('invm');if(!m){m=document.createElement('div');m.id='invm';m.className='pqmod';document.body.appendChild(m);m.onclick=e=>{if(e.target===m)m.classList.remove('on')}}
+ m.innerHTML=`<div class="pqbx" style="max-width:1000px"><div class="pqhd"><b>${esc(t)}</b><span class="pqx" onclick="document.getElementById('invm').classList.remove('on')">✕</span></div><div style="padding:12px 16px;overflow:auto;max-height:78vh">${html}</div></div>`;m.classList.add('on')};
+let LST=[];
+const invAll=()=>{const I=D&&D.inv;if(!I)return[];const px=(I.px||[]).map(r=>({...r,ent:'Paquetexpress'})),gl=(I.gl||[]).map(r=>({...r,ent:'PXGL'}));const fl=new Map((window.FLALL||FL).map(f=>[nz(f.e),f]));
+ return px.concat(gl).map(r=>{const f=fl.get(nz(r.e));return{...r,reg:f&&f.r?cr(f.r):'',inF:!!f,gl:r.ent==='PXGL'||!!(f&&f.gl)}})};
+const ulist=(t,rs)=>{LST.push(rs);const i=LST.length-1;return i};
+window.invL=i=>{const rs=LST[i]||[];nvm('🗂️ '+(rs.t||'Unidades')+' · '+rs.length,unitTable(rs.slice(0,400))+(rs.length>400?'<p class="note">Se muestran 400.</p>':''))};
+const unitTable=rs=>tbl(['Económico','Anterior','Entidad','Vehículo','Marca','Sub-marca','Modelo','Motor','Serie','Placas','Región (Flota)'],rs.map(r=>`<tr><td><b>${esc(r.e)}</b></td><td>${esc(r.a||(r.al||[]).join(', '))}</td><td>${r.ent}</td><td>${esc(r.v)}${r.pi?' '+r.pi+'′':''}</td><td>${esc(r.ma)}</td><td>${esc(r.sb)}</td><td>${esc(r.mo)}</td><td>${esc(r.tm)}</td><td>${esc(r.sr)}</td><td>${esc(r.pl)}</td><td>${esc(r.reg||'')}</td></tr>`));
+const bars=(items,color)=>{const mx=Math.max(1,...items.map(x=>x.n));return items.map(x=>`<div class="hb" style="cursor:pointer" onclick="invL(${ulist(x.k,Object.assign(x.rs,{t:x.k}))})" title="Clic para ver las unidades"><span class="l" title="${esc(x.k)}">${esc(x.k)}</span><div class="t"><i style="width:${100*x.n/mx}%;background:${color||'var(--pr)'}"></i></div><b>${fm(x.n)}</b></div>`).join('')||'<p class="note">Sin datos.</p>'};
+const grp=(rs,kf)=>{const m=new Map();rs.forEach(r=>{const k=kf(r)||'(sin dato)';(m.get(k)||m.set(k,[]).get(k)).push(r)});return[...m].map(([k,v])=>({k,n:v.length,rs:v})).sort((a,b)=>b.n-a.n)};
+function TInv(){const I=D&&D.inv;LST=[];
+ if(!I||!((I.px&&I.px.length)||(I.gl&&I.gl.length)))return `<h2>Inventario de unidades</h2><p class="sub">Aún no hay inventario ordenado cargado.</p><div class="card"><h3>Cómo cargarlo</h3><p>Entra como administrador, pulsa <b>📎 Cargar archivos</b> y adjunta el Excel <b>inventario_unidades_logistica_ok</b> (hojas TRACTOS, REMOLQUES, DOLLYS, PGL…) y la <b>flota PXGL</b>. Después genera y sube el data.enc.json.</p></div>`;
+ const q=S.invq||'',en=S.inve||'T',all=invAll(),rs=all.filter(r=>en==='T'||(en==='PX'?r.ent==='Paquetexpress':r.ent==='PXGL')),tr=rs.filter(r=>r.v==='TRACTOCAMIÓN'||r.v==='RABON'||r.v==='TORTON'||r.h==='TRACTOS'||r.h==='PGL TRACTOS'),rm=rs.filter(r=>r.v==='REMOLQUE'),dl=rs.filter(r=>r.v==='DOLLY'),ot=rs.filter(r=>!tr.includes(r)&&!rm.includes(r)&&!dl.includes(r));
+ const ch=(k,v,l)=>`<span class="chip ${(S[k]||'T')===v?'on':''}" onclick="S.${k}='${v}';R()">${l}</span>`;
+ const L=(t,x)=>{x.t=t;return ulist(t,x)},kc=(v,l,list,c)=>`<div class="card kpi ${c||''}" style="cursor:pointer" onclick="invL(${list})"><b>${v}</b><span>${l}</span></div>`;
+ const avg=a=>{const y=a.map(r=>+r.mo).filter(v=>v>1990&&v<2035);return y.length?(2026-y.reduce((s,v)=>s+v,0)/y.length).toFixed(1):'–'};
+ const f=INVR||{bajasEnFlota:[],sinFlota:[],soloFlota:[],sinRegion:[]},toU=l=>l.map(x=>({e:x.e,a:'',ent:x.gl?'PXGL':'Paquetexpress',v:x.v,pi:'',ma:x.ma||'',sb:'',mo:x.mo||'',tm:'',sr:'',pl:'',reg:x.r?cr(x.r):''}));
+ const dup=(kf)=>{const m=new Map();all.forEach(r=>{const k=kf(r);if(k)(m.get(k)||m.set(k,[]).get(k)).push(r)});return[...m.values()].filter(v=>v.length>1).flat()};
+ const dE=dup(r=>nz(r.e)),dS=dup(r=>r.sr&&r.sr.length>6?r.sr:'');
+ const fil=rs.filter(r=>!q||(r.e+' '+r.a+' '+r.ma+' '+r.sb+' '+r.mo+' '+r.sr+' '+r.pl+' '+r.tm+' '+r.v).toUpperCase().includes(q.toUpperCase()));
+ const tipos=grp(tr,r=>[r.ma,r.sb,r.tm].filter(Boolean).join(' ')),yr=grp(rs,r=>r.mo).sort((a,b)=>b.k<a.k?-1:1),pies=grp(rm,r=>(r.pi?r.pi+' pies':'(sin medida)')),susp=grp(rs.filter(r=>r.v!=='TRACTOCAMIÓN'&&r.su),r=>r.su);
+ const chk=(l,list,c,help)=>`<tr class="c" onclick="invL(${list})"><td>${l}</td><td><b style="color:var(--${c||'tx'})">${fm(LST[list].length)}</b></td><td class="note">${help}</td></tr>`;
+ return `<h2>Inventario de unidades</h2><p class="sub">Catálogo ordenado de Paquetexpress y PXGL · ${I.meta&&I.meta.gen?'cargado '+esc(I.meta.gen):''}${I.meta&&I.meta.files?' · '+esc(I.meta.files.join(', ')):''}</p>
+ <div class="fbar"><b>Entidad</b>${ch('inve','T','Ambos')}${ch('inve','PX','Paquetexpress')}${ch('inve','GL','PXGL')}<span class="note">El botón <b>CONSIDERAR PXGL</b> del menú lateral prende o apaga PXGL en todos los indicadores del portal.</span></div>
+ <div class="grid g4">${kc(fm(rs.length),'unidades en inventario',L('Unidades',rs.slice()))}${kc(fm(tr.length),'tractos y rabones/tortons',L('Tractos',tr.slice()),'')}${kc(fm(rm.length),'remolques',L('Remolques',rm.slice()))}${kc(fm(dl.length+ot.length),'dollys y otros',L('Dollys y otros',dl.concat(ot)))}</div>
+ <div class="grid g4" style="margin-top:12px">${kp(fm(all.filter(r=>r.ent==='Paquetexpress').length),'Paquetexpress')}${kp(fm(all.filter(r=>r.ent==='PXGL').length),'PXGL','a')}${kp(avg(rs)+' años','antigüedad promedio')}${kp(fm((I.bj||[]).length),'bajas registradas','r')}</div>
+ <div class="grid g2" style="margin-top:14px"><div class="card"><h3>Tractos por marca · sub-marca · motor</h3>${bars(tipos.slice(0,14))}</div><div class="card"><h3>Unidades por año modelo</h3>${bars(yr.slice(0,14),'var(--ac)')}</div></div>
+ <div class="grid g2"><div class="card"><h3>Remolques por medida</h3>${bars(pies,'#8b5cf6')}</div><div class="card"><h3>Suspensión</h3>${bars(susp,'#22d3ee')}</div></div>
+ <div class="card"><h3>Revisión del inventario contra la Flota</h3><p class="hint"><span>👆</span> Clic en una fila para ver las unidades</p>${tbl(['Revisión','Unidades','Qué significa'],[
+  chk('Inventario que no estaba en la Flota (ya agregadas)',L('Inventario no estaba en la Flota',toU(f.sinFlota)),'a','Se suman a los indicadores con el inventario ordenado'),
+  chk('Están en la Flota pero no en el inventario',L('En Flota pero no en inventario',toU(f.soloFlota)),'a','Se conservan; conviene revisarlas'),
+  chk('Dadas de baja pero aún en la Flota',L('Baja aún en Flota',toU(f.bajasEnFlota)),'rd','Se excluyen de los indicadores'),
+  chk('Inventario sin región en la Flota',L('Sin región',toU(f.sinRegion)),'a','Remolques y dollys no traen región'),
+  chk('Económicos repetidos',L('Económicos repetidos',dE),'rd','El mismo número aparece más de una vez'),
+  chk('Series repetidas',L('Series repetidas',dS),'rd','El mismo número de serie en más de una unidad')].map(x=>x))}</div>
+ <div class="card"><h3>Unidades</h3><div class="fbar" style="margin:0 0 8px"><b>Buscar</b><input type="text" value="${esc(q)}" placeholder="económico, marca, serie, placas…" onchange="S.invq=this.value;R()" style="min-width:260px"><button class="btn" onclick="invX()">⬇ Excel</button><span class="note">${fm(fil.length)} unidades · se muestran 300</span></div><div style="overflow:auto">${unitTable(fil.slice(0,300))}</div></div>`}
+window.invX=function(){try{const rs=invAll(),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Económico','Anterior / alias','Entidad','Vehículo','Marca','Sub-marca','Modelo','Tipo de motor','Serie','Placas','Medida (pies)','Suspensión','Estado','Región (Flota)','En Flota']].concat(rs.map(r=>[r.e,r.a||(r.al||[]).join(', '),r.ent,r.v,r.ma,r.sb,r.mo,r.tm,r.sr,r.pl,r.pi,r.su,r.es,r.reg,r.inF?'Sí':'No']))),'Inventario');XLSX.writeFile(wb,'Inventario_unidades.xlsx')}catch(e){alert('No se pudo generar el Excel: '+e.message)}};
+window.__invReg=()=>{TABS.push('🗂️ Inventario');FN[13]=TInv;GRP.push(['INVENTARIO',[13]])};
+const css=document.createElement('style');css.textContent=`#pxg{padding:6px 10px 10px}.pxt{display:flex;align-items:center;gap:10px;width:100%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;border-radius:12px;padding:9px 11px;cursor:pointer;text-align:left}.pxt .pxs{width:38px;height:22px;border-radius:12px;background:#5c6b8f;position:relative;flex:none;transition:.2s}.pxt .pxs i{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}.pxt.on .pxs{background:#34d399}.pxt.on .pxs i{left:19px}.pxt .pxl{display:flex;flex-direction:column;line-height:1.2}.pxt .pxl b{font-size:12.5px;letter-spacing:.04em}.pxt .pxl small{font-size:11px;opacity:.75}.pxt.off{border-color:#ffab40}.pxb{position:absolute;right:14px;bottom:10px;font-size:11px;font-weight:800;letter-spacing:.06em;padding:3px 9px;border-radius:20px;background:rgba(52,211,153,.2);color:#8ff0c3}.pxb.off{background:#ffab40;color:#3a2500}.ph{position:relative}`;document.head.appendChild(css);
+try{pxUI()}catch(_){}
+window.__inv=()=>({PXS,INVR,invRead,glDedupe});
+})();
+/* ===== Bloque de GASTOS de mantenimiento · Logística (v2: por región, estilo Operaciones) ===== */
 (function(){
 const MS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],MSL=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const pl=p=>MS[+p.slice(5,7)-1]+' '+p.slice(2,4),pll=p=>MSL[+p.slice(5,7)-1]+' de '+p.slice(0,4),pm=p=>MSL[+p.slice(5,7)-1]+' '+p.slice(0,4);
@@ -1552,6 +1684,7 @@ const zn=z=>z==='CENTRO'?'CENTRO (sin precisar 1 o 2)':z;
 const realZ=z=>z!==MAT&&z!==FUERA&&z!==SZ;
 let GX=null,GXR=[],GXO=[],UI=new Map(),INV={z:new Map(),t:new Map(),all:0},GK=null,GLEG=false,MEMO={};
 const fb=u=>{const o=UI.get(u);return o&&o.fuera?' <span class="tag a" title="Ya no está en el inventario vigente; se conserva su última clasificación">Fuera de inventario</span>':''};
+const nidg=s=>{const t=nz(s),m=/^(PXM?)0*(\d+)$/.exec(t);return m?m[1]+m[2]:t};
 const $g=id=>document.getElementById(id);
 const ST=['Resumen','¿Por qué cambió?','Regiones','Cuentas','Preventivo vs correctivo','Tipo de unidad','Proveedores','Unidades','Cruce con flota','Detalle','Evaluación','Costos por KM'];
 
@@ -1564,10 +1697,10 @@ function gxBuild(){GX=null;GXR=[];GXO=[];UI=new Map();INV={z:new Map(),t:new Map
   if(mat){z=MAT;t='SIN UNIDAD (general / taller)'}
   else if(f){z=zn(f.r?cr(f.r):((segReg.get(k)||{}).r||SZ));t=gF(f)||d||'SIN DESCRIPCIÓN';mo=f.mo?String(f.mo).trim():'SIN MODELO'}
   else{const sn=(g.id||{})[u];if(sn){z=sn[0];t=sn[1];mo=sn[2]}else{z=zn((segReg.get(k)||{}).r||FUERA);t=MM[k]?mg(u):(d||'SIN DESCRIPCIÓN');mo='SIN MODELO'}}
-  if(!mat&&(/FREIGHTLINER M2/.test(t)||(f&&/FREIGHTLINER M2/i.test(f.ma||''))))t='FREIGHTLINER M2';if(!mat&&f&&realZ(z)){(g.id=g.id||{})[u]=[z,t,mo]}else if(!mat&&!f&&(g.id||{})[u]&&/FREIGHTLINER M2/.test(t)){t='FREIGHTLINER M2'}o={u,z,t,mo,mat,fuera:!mat&&!f,inv:!!f,e:f?f.e:u,f:f||null,d};UI.set(u,o);return o};
+  if(!mat&&(/FREIGHTLINER M2/.test(t)||(f&&/FREIGHTLINER M2/i.test(f.ma||''))))t='FREIGHTLINER M2';if(!mat&&f&&realZ(z)){(g.id=g.id||{})[u]=[z,t,mo]}else if(!mat&&!f&&(g.id||{})[u]&&/FREIGHTLINER M2/.test(t)){t='FREIGHTLINER M2'}o={u,z,t,mo,mat,gl:!mat&&(!!(window.PXS&&PXS.has(nidg(u)))||!!(f&&f.gl)||z==='PXGL'),fuera:!mat&&!f,inv:!!f,e:f?f.e:u,f:f||null,d};UI.set(u,o);return o};
  const kc=g.cu.map(clsName),sis=g.cu.map(sisOf),pe=g.pe;
- GXR=g.r.map(a=>{const u=g.un[a[1]],o=info(u),c=g.cu[a[2]];return{p:pe[a[0]],u,c,pv:g.pv[a[3]],no:g.no[a[4]],sb:g.sb[a[5]],tp:a[6],m:a[7],n:a[8],k:kc[a[2]]||TPC[a[6]],sis:sis[a[2]],z:o.z,t:o.t,mo:o.mo,mat:o.mat,eq:/MONTACARGA/.test(c)||/MONTACARGA|KALMAR/.test(o.t)?'Montacargas':'Móviles'}});
- GXO=(g.ot||[]).map(a=>{const u=g.un[a[1]],o=info(u),c=g.cu[a[2]];return{p:pe[a[0]],u,c,pv:g.pv[a[3]],sb:g.sb[a[4]],k:TPC[a[5]],no:g.no[a[6]],sis:sisOf(c),z:o.z,t:o.t,mo:o.mo,mat:o.mat}});
+ GXR=g.r.map(a=>{const u=g.un[a[1]],o=info(u),c=g.cu[a[2]];return{p:pe[a[0]],u,c,pv:g.pv[a[3]],no:g.no[a[4]],sb:g.sb[a[5]],tp:a[6],m:a[7],n:a[8],k:kc[a[2]]||TPC[a[6]],sis:sis[a[2]],z:o.z,t:o.t,mo:o.mo,mat:o.mat,gl:o.gl,eq:/MONTACARGA/.test(c)||/MONTACARGA|KALMAR/.test(o.t)?'Montacargas':'Móviles'}});
+ GXO=(g.ot||[]).map(a=>{const u=g.un[a[1]],o=info(u),c=g.cu[a[2]];return{p:pe[a[0]],u,c,pv:g.pv[a[3]],sb:g.sb[a[4]],k:TPC[a[5]],no:g.no[a[6]],sis:sisOf(c),z:o.z,t:o.t,mo:o.mo,mat:o.mat,gl:o.gl}});
  FL.forEach(f=>{const o=info(String(f.e).trim().toUpperCase());INV.all++;INV.z.set(o.z,(INV.z.get(o.z)||0)+1);INV.t.set(o.t,(INV.t.get(o.t)||0)+1)});
  const ps=pe.slice().sort(),cnt=g.nr||{},last=ps[ps.length-1],prev=ps.slice(-4,-1).map(p=>cnt[p]||0).sort((a,b)=>a-b),med=prev.length?prev[prev.length>>1]:0,parc=new Set();
  if(last&&med&&(cnt[last]||0)<.7*med)parc.add(last);
@@ -1578,7 +1711,7 @@ function gxDefaults(){const ps=GX.pe,last=ps[ps.length-1];S.gh=last;S.gd=ps.find
 const _ing=window.ingest;window.ingest=function(){const r=_ing.apply(this,arguments);try{gxBuild()}catch(e){console.warn('gx',e)}return r};
 
 /* ---------- filtros y agregaciones ---------- */
-function sel(A,o){o=o||{};const a=S.gd,b=S.gh,cl=S.gcl;return A.filter(r=>(o.per||(r.p>=a&&r.p<=b))&&(o.nocls||cl==='T'||(cl==='PC'?r.k!=='S':r.k===cl))&&(o.allmat||S.gmz||!r.mat)&&(o.nozone||!S.gz||r.z===S.gz)&&(!S.gt2||r.t===S.gt2)&&(!S.gmo||r.mo===S.gmo)&&(o.nocu||!S.gcu||r.c===S.gcu))}
+function sel(A,o){o=o||{};const a=S.gd,b=S.gh,cl=S.gcl;return A.filter(r=>(o.per||(r.p>=a&&r.p<=b))&&(o.nocls||cl==='T'||(cl==='PC'?r.k!=='S':r.k===cl))&&(S.pxgl!==false||!r.gl)&&(o.allmat||S.gmz||!r.mat)&&(o.nozone||!S.gz||r.z===S.gz)&&(!S.gt2||r.t===S.gt2)&&(!S.gmo||r.mo===S.gmo)&&(o.nocu||!S.gcu||r.c===S.gcu))}
 function agg(rs,kf){const m=new Map();rs.forEach(r=>{const k=kf(r);let o=m.get(k);if(!o)m.set(k,o={k,m:0,P:0,C:0,S:0,n:0,u:new Set()});o.m+=r.m;o[r.k]+=r.m;o.n+=r.n;if(!r.mat)o.u.add(r.u)});return[...m.values()]}
 const tot=rs=>{let m=0,P=0,C=0,S2=0;rs.forEach(r=>{m+=r.m;if(r.k==='P')P+=r.m;else if(r.k==='C')C+=r.m;else S2+=r.m});return{m,P,C,S:S2}};
 const per=()=>GX.pe.filter(p=>p>=S.gd&&p<=S.gh);
@@ -1651,7 +1784,7 @@ function bar(){const opt=v=>GX.pe.map(p=>`<option value="${p}" ${p===v?'selected
  <b>Tipo de unidad</b>${so('gt2',ts,'Todos')}<b>Modelo</b>${so('gmo',mos,'Todos')}<b>Cuenta</b>${so('gcu',cs,'Todas')}</div>
  <div class="gxr"><b>Matriz</b><span class="chip ${S.gmz?'on':''}" onclick="gxSet('gmz',${!S.gmz})" title="Matriz = gasto que no se puede asignar a un económico (general, talleres, sin unidad)">Incluir gastos de Matriz</span>${act?'<button class="fclr" onclick="gxClear()">✕ Limpiar filtros</button>':''}
  <span class="note">Preventivo / correctivo según el nombre de la cuenta contable (si no lo dice, según la orden de trabajo). Clic en cualquier cifra o gráfica para ver de qué se compone.</span></div></div>`}
-const ABR=()=>`<p class="note">Periodo ${pl(S.gd)} a ${pl(S.gh)}${GX.pe.some(p=>GX.parc.has(p)&&p>=S.gd&&p<=S.gh)?' · * mes parcial (aún incompleto)':''}.</p>`;
+const ABR=()=>`<p class="note">${S.pxgl===false?'<b style="color:#ffab40">SIN PXGL</b> · ':''}Periodo ${pl(S.gd)} a ${pl(S.gh)}${GX.pe.some(p=>GX.parc.has(p)&&p>=S.gd&&p<=S.gh)?' · * mes parcial (aún incompleto)':''}.</p>`;
 const mkd=(t,pf,o,az,ac)=>dr(t,pf,o,az,ac);
 function invOf(z){return INV.z.get(z)||0}
 const unitsOf=rs=>new Set(rs.filter(r=>!r.mat).map(r=>r.u)).size;
@@ -1842,17 +1975,17 @@ function TG(){if(!GX)return nodata();DR=[];LASTD=null;PATHR=[];if(S.gst==null||S
  <div class="gxr" style="margin-top:14px"><button class="btn" onclick="gxXlsx()">⬇ Excel de esta vista</button><button class="btn" onclick="gxDeck()">▶ Presentación</button></div>`}
 
 /* ---------- texto resumen (WhatsApp, Gaceta, Hallazgos) ---------- */
-function sum2(){if(!GX)return null;const full=GX.full,B=full[full.length-1],A=full[full.length-2],all=sel(GXR,{per:1,nocls:1,nozone:1,nocu:1,allmat:1}).length?GXR:GXR;
+function sum2(){if(!GX)return null;const full=GX.full,B=full[full.length-1],A=full[full.length-2],all=GXR.filter(r=>S.pxgl!==false||!r.gl);
  const bm=p=>all.filter(r=>r.p===p),tB=tot(bm(B)),tA=A?tot(bm(A)):null,zb=agg(bm(B),r=>r.z).sort((a,b)=>b.m-a.m),cb=agg(bm(B),r=>r.c).sort((a,b)=>b.m-a.m);
  const cy=B.slice(0,4),ytd=tot(all.filter(r=>r.p.slice(0,4)===cy&&r.p<=B)),py=tot(all.filter(r=>r.p.slice(0,4)===String(+cy-1)&&r.p.slice(5)<=B.slice(5)));
  let drv=null;if(A){const m=new Map();bm(A).forEach(r=>m.set(r.c,(m.get(r.c)||0)-r.m));bm(B).forEach(r=>m.set(r.c,(m.get(r.c)||0)+r.m));drv=[...m].map(([k,v])=>({k,v})).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v))[0]}
  const zz=zb.filter(o=>realZ(o.k));
  return{B,A,tB,tA,zb,cb,zz,ytd,py,cy,drv}}
-window.gxWa=function(t){try{const s=sum2();if(s){const d=s.tA?s.tB.m-s.tA.m:0;t+=`\n\n💰 *Gasto de mantenimiento ${pl(s.B)}:* ${mm(s.tB.m)}${s.tA?` (${d>=0?'▲':'▼'} ${sp(100*d/s.tA.m)}% vs ${pl(s.A)})`:''}\n• Preventivo ${pc(s.tB.P,s.tB.m)} · Correctivo ${pc(s.tB.C,s.tB.m)} · Sin OT ${pc(s.tB.S,s.tB.m)}\n• Acumulado ${s.cy}: ${mm(s.ytd.m)}${s.py.m?` (${sp(100*(s.ytd.m-s.py.m)/s.py.m)}% vs mismo periodo ${+s.cy-1})`:''}\n`+s.zz.slice(0,3).map(o=>`• ${o.k}: ${mm(o.m)}`).join('\n')+(s.drv?`\n• Mayor cambio: ${s.drv.k} (${s.drv.v>=0?'+':'−'}${mm(Math.abs(s.drv.v))})`:'')}}catch(e){console.warn(e)}return t};
+window.gxWa=function(t){try{const s=sum2();if(s){const d=s.tA?s.tB.m-s.tA.m:0;t+=`\n\n💰 *Gasto de mantenimiento ${pl(s.B)}${S.pxgl===false?' (sin PXGL)':''}:* ${mm(s.tB.m)}${s.tA?` (${d>=0?'▲':'▼'} ${sp(100*d/s.tA.m)}% vs ${pl(s.A)})`:''}\n• Preventivo ${pc(s.tB.P,s.tB.m)} · Correctivo ${pc(s.tB.C,s.tB.m)} · Sin OT ${pc(s.tB.S,s.tB.m)}\n• Acumulado ${s.cy}: ${mm(s.ytd.m)}${s.py.m?` (${sp(100*(s.ytd.m-s.py.m)/s.py.m)}% vs mismo periodo ${+s.cy-1})`:''}\n`+s.zz.slice(0,3).map(o=>`• ${o.k}: ${mm(o.m)}`).join('\n')+(s.drv?`\n• Mayor cambio: ${s.drv.k} (${s.drv.v>=0?'+':'−'}${mm(Math.abs(s.drv.v))})`:'')}}catch(e){console.warn(e)}return t};
 const jcols=(rows,c,H)=>{const mx=Math.max(1,...rows.map(r=>r.v)),W=1120,bw=Math.min(52,W/rows.length-10);return `<svg viewBox="0 0 ${W} ${H+46}" width="100%">${rows.map((r,i)=>{const x=i*(W/rows.length)+(W/rows.length-bw)/2,h=Math.max(2,(H-36)*r.v/mx);return `<g><rect x="${x}" y="${H-h}" width="${bw}" height="${h}" rx="5" fill="${c}"/><text x="${x+bw/2}" y="${H-h-8}" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">${mm(r.v)}</text><text x="${x+bw/2}" y="${H+22}" text-anchor="middle" fill="#b6c8ee" font-size="14">${esc(r.k)}</text></g>`}).join('')}</svg>`};
 window.gxJ=function(out){try{const s=sum2();if(s){const E2=esc,mx=s.zz[0]?s.zz[0].m:1,d=s.tA?s.tB.m-s.tA.m:0;
  const ps=GX.pe.slice(-12),by=new Map(agg(GXR.filter(r=>ps.includes(r.p)),r=>r.p).map(o=>[o.k,o]));
- out.push(['Gasto de mantenimiento · '+pl(s.B),`<div class="jg3"><div class="jk" style="grid-template-columns:1fr 1fr"><div><b style="color:#7ab8ff">${mm(s.tB.m)}</b><span>gasto del mes${s.tA?' ('+(d>=0?'▲ ':'▼ ')+sp(100*d/s.tA.m)+'% vs mes anterior)':''}</span></div><div><b style="color:#ff8593">${pc(s.tB.C,s.tB.m)}</b><span>correctivo del gasto</span></div><div><b style="color:#36d08a">${mm(s.ytd.m)}</b><span>acumulado ${s.cy}</span></div><div><b style="color:#ffb84d">${s.zz[0]?E2(s.zz[0].k):'–'}</b><span>región con más gasto · ${s.zz[0]?mm(s.zz[0].m):''}</span></div></div><div class="jcol">${jcols(ps.map(p=>({k:pl(p),v:(by.get(p)||{m:0}).m})),'#4f8cff',230)}<div class="jn">Gasto mensual de mantenimiento (últimos 12 meses)</div></div></div>`]);
+ out.push(['Gasto de mantenimiento · '+pl(s.B)+(S.pxgl===false?' · sin PXGL':''),`<div class="jg3"><div class="jk" style="grid-template-columns:1fr 1fr"><div><b style="color:#7ab8ff">${mm(s.tB.m)}</b><span>gasto del mes${s.tA?' ('+(d>=0?'▲ ':'▼ ')+sp(100*d/s.tA.m)+'% vs mes anterior)':''}</span></div><div><b style="color:#ff8593">${pc(s.tB.C,s.tB.m)}</b><span>correctivo del gasto</span></div><div><b style="color:#36d08a">${mm(s.ytd.m)}</b><span>acumulado ${s.cy}</span></div><div><b style="color:#ffb84d">${s.zz[0]?E2(s.zz[0].k):'–'}</b><span>región con más gasto · ${s.zz[0]?mm(s.zz[0].m):''}</span></div></div><div class="jcol">${jcols(ps.map(p=>({k:pl(p),v:(by.get(p)||{m:0}).m})),'#4f8cff',230)}<div class="jn">Gasto mensual de mantenimiento (últimos 12 meses)</div></div></div>`]);
  out.push(['Gasto por región · '+pl(s.B),`<div class="jl">${s.zz.slice(0,8).map(o=>`<div class="jb"><span>${E2(o.k)}</span><div class="jt"><i style="width:${Math.max(2,100*o.m/mx)}%;background:#4f8cff"></i></div><b>${mm(o.m)} <small>· ${pc(o.C,o.m)} correctivo</small></b></div>`).join('')}</div><div class="jn">Gasto por región del económico · Matriz/general aparte: ${mm((s.zb.find(o=>o.k===MAT)||{m:0}).m)}</div>`])}}catch(e){console.warn(e)}return out};
 const _t10=window.T10;FN[10]=function(){let h=_t10();try{const s=sum2();if(s){const L=[];const d=s.tA?s.tB.m-s.tA.m:0;L.push(`Gasto de mantenimiento de <b>${pll(s.B)}</b>: <b>${mon(s.tB.m)}</b>${s.tA?`, ${d>=0?'<b style="color:var(--rd)">+':'<b style="color:var(--gn)">−'}${mon(Math.abs(d))} (${sp(100*d/s.tA.m)}%)</b> frente a ${pll(s.A)}`:''}. El <b>${pc(s.tB.C,s.tB.m)}</b> fue correctivo.`);if(s.drv)L.push(`El mayor cambio contra el mes anterior está en <b>${esc(s.drv.k)}</b> (${s.drv.v>=0?'+':'−'}${mon(Math.abs(s.drv.v))}).`);if(s.zz[0])L.push(`La región con más gasto es <b>${esc(s.zz[0].k)}</b> con ${mon(s.zz[0].m)} (${pc(s.zz[0].m,s.tB.m)} del mes).`);if(s.py.m)L.push(`Acumulado ${s.cy}: <b>${mon(s.ytd.m)}</b>, ${sp(100*(s.ytd.m-s.py.m)/s.py.m)}% contra el mismo periodo de ${+s.cy-1}.`);
  h+=`<div class="card" style="margin-top:14px"><h3>💰 Hallazgos de gasto de mantenimiento</h3><ul>${L.map(x=>`<li>${x}</li>`).join('')}</ul><p><span class="chip on" onclick="S.tab=12;S.gst=1;R()">Ver por qué cambió →</span></p></div>`}}catch(e){console.warn(e)}return h};
@@ -1945,4 +2078,5 @@ const _R=window.R;window.R=function(){const r=_R.apply(this,arguments);try{if(S.
 const css=document.createElement('style');css.textContent=`.pqmod#gxum .card.kpi b{font-size:25px}.pqmod#gxum .card.kpi{min-height:0;padding:12px 14px}.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mu);margin-bottom:6px}.lg s{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;text-decoration:none}.fbar[style*=column]::before{align-self:flex-start}.gxr{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}.gxr>b{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.gxr select,.gxr input[type=text]{background:var(--card,#fff);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px}.fbar input[type=text]{background:var(--bg2,#0f1a33);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px 10px}`;document.head.appendChild(css);
 window.__gx=()=>({GXR,GXO,INV,GX,UI,TG,SUBS,rb:gxBuild});
 try{gxBuild()}catch(_){}
-})();</script></body></html>
+})();
+__invReg();try{R()}catch(_){}</script></body></html>
