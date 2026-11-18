@@ -1069,7 +1069,7 @@ function snap(){const at=actTr(),ab=SEG.filter(x=>x.i&&!x.o),dt=ab.filter(x=>x.t
 function toast(m){let t=document.getElementById('pqts');if(!t){t=document.createElement('div');t.id='pqts';document.body.appendChild(t)}t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2600)}
 function copyTxt(s){return(navigator.clipboard&&window.isSecureContext?navigator.clipboard.writeText(s):Promise.reject()).catch(()=>{const a=document.createElement('textarea');a.value=s;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()})}
 // ---------- WhatsApp
-function waText(){const s=snap(),mt=s.u>=MT?`✅ cumple la meta de ${MT}%`:`⚠️ meta ${MT}%: faltan ${fm(MT-s.u,1)} pp · liberar ${s.rel} tractos`;
+function waText(){const t=waText0();return window.gxWa?window.gxWa(t):t}function waText0(){const s=snap(),mt=s.u>=MT?`✅ cumple la meta de ${MT}%`:`⚠️ meta ${MT}%: faltan ${fm(MT-s.u,1)} pp · liberar ${s.rel} tractos`;
  const bajo=s.rows.filter(r=>r.u<MT).slice(0,4).map(r=>`• ${r.r}: ${fm(r.u,1)}% (${r.n} det. · liberar ${relMeta(r.a,r.n)})`).join('\n'),
  ant=s.old.slice(0,4).map(x=>`• ${x.e} · ${x.reg} · ${dur(x)} d · ${x.c||'sin causa'}`).join('\n'),
  cz=s.cau.slice(0,3).map(c=>`${c.k} (${c.c})`).join(', ');
@@ -1083,7 +1083,7 @@ window.waOpen=waOpen;
 // ---------- Modo junta
 let jT=0,jI=0,jP=0,jS=null;
 const jBar=(rows,mx,f,c)=>rows.map(r=>`<div class="jb"><span>${E(r.k)}</span><div class="jt"><i style="width:${Math.max(2,100*r.v/(mx||1))}%;background:${r.c||c||'#ffab3d'}"></i></div><b>${f(r)}</b></div>`).join('');
-function jSlides(){const s=snap(),col=s.u>=MT?'#36d08a':s.u>=95?'#ffab3d':'#ff5d6c',R=96,Lc=2*Math.PI*R;const out=[];
+function jSlides(){const o=jSlides0();return window.gxJ?window.gxJ(o):o}function jSlides0(){const s=snap(),col=s.u>=MT?'#36d08a':s.u>=95?'#ffab3d':'#ff5d6c',R=96,Lc=2*Math.PI*R;const out=[];
  out.push(['Panorama general',`<div class="jg"><div class="jring"><svg viewBox="0 0 240 240"><circle cx="120" cy="120" r="${R}" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="22"/><circle cx="120" cy="120" r="${R}" fill="none" stroke="${col}" stroke-width="22" stroke-linecap="round" stroke-dasharray="${(Lc*s.u/100).toFixed(1)} ${Lc.toFixed(1)}" transform="rotate(-90 120 120)"/><text x="120" y="120" text-anchor="middle" fill="#fff" font-size="50" font-weight="800">${fm(s.u,1)}%</text><text x="120" y="150" text-anchor="middle" fill="#b6c8ee" font-size="15">UP TIME TRACTOS</text></svg><div class="jmeta" style="color:${col}">${s.u>=MT?'✅ Meta '+MT+'% cumplida':'Meta '+MT+'% · faltan '+fm(MT-s.u,1)+' pp'}</div>${s.u<MT?`<div class="jsub">Liberar ${s.rel} tractos para llegar a la meta</div>`:''}</div><div class="jk"><div><b style="color:#ff8593">${s.ab.length}</b><span>unidades detenidas</span></div><div><b style="color:#ffb84d">${s.dt.length}</b><span>tractos detenidos</span></div><div><b style="color:#7ab8ff">${fm(sum(s.ab,dur))}</b><span>días-unidad acumulados</span></div><div><b style="color:#ff8593">${s.o30.length}</b><span>con más de 30 días</span></div></div></div>`]);
  out.push(['Up Time por región vs meta '+MT+'%',`<div class="jl">${s.rows.map(r=>{const c=r.u>=MT?'#36d08a':r.u>=95?'#ffab3d':'#ff5d6c',rl=relMeta(r.a,r.n);return `<div class="jb"><span>${E(r.r)}</span><div class="jt" style="position:relative"><i style="width:${Math.max(2,(r.u-80)*5)}%;background:${c}"></i><s style="left:${(MT-80)*5}%"></s></div><b>${fm(r.u,1)}% <small>${rl?'· liberar '+rl:'✓ meta'}</small></b></div>`}).join('')}</div><div class="jn">Línea blanca = meta ${MT}% · Escala desde 80% · ${s.dt.length} de ${s.at.length} tractos detenidos</div>`]);
  out.push(['Atención inmediata · las más antiguas',`<table class="jtb"><tr><th>Económico</th><th>Región</th><th>Días</th><th>Causa</th><th>Responsable</th><th>Etapa</th></tr>${s.old.slice(0,8).map(x=>`<tr><td><b>${E(x.e)}</b></td><td>${E(x.reg)}</td><td><b style="color:${dur(x)>90?'#ff8593':'#ffb84d'}">${dur(x)}</b></td><td>${E(x.c||'')}</td><td>${E(x.w||'')}</td><td>${E(x.p||x.s||'')}</td></tr>`).join('')}</table>`]);
@@ -1249,7 +1249,7 @@ function build(){
  const outro='Y esas fueron las noticias de la flota. Paquetexpress, logística segura. Hasta la próxima edición.';
  return {d,dt,u,c,rows,N,old,causes,ent,sal,ds,o90,fecha,intro,outro,lib};
 }
-let B=null;
+let B=null;window.npB=()=>B;
 function T0n(){B=build();setTimeout(()=>{loadVoices();ui()},0);const {d,dt,u,c,rows,N,old,causes,ds,o90,fecha}=B;
  const kd=(v,l,k)=>`<div class="card kpi"><b style="color:${k}">${v}</b><span>${l}</span></div>`;
  const art=(i,inner)=>`<article class="na" id="np-n${i}"><div class="nk">${N[i].k}</div><h3 class="nh">${N[i].h}</h3>${N[i].show?`<p class="nb">${N[i].show}</p>`:''}${inner||''}</article>`;
@@ -1269,7 +1269,7 @@ function T0n(){B=build();setTimeout(()=>{loadVoices();ui()},0);const {d,dt,u,c,r
  </div>
  <div class="npg2">${art(5)}${art(6)}</div>
  <div class="imgs npim">${[0,1,3,4].map(i=>`<img src="${IMG[i]}">`).join('')}</div>
- <footer class="npo" id="np-n7"><b>Cierre de edición</b> · Paquetexpress, logística segura. <span class="note adm" style="color:#6b6350">📎 Para actualizar: pulsa <b>Cargar archivos</b> y adjunta los 3 Excel vigentes (Dashboard de inmovilizadas, Flota del mes y Semáforo de tractos). Después pulsa <b>⬇ Generar data.enc.json</b> y súbelo a GitHub reemplazando el anterior.</span></footer></div>`}
+ <footer class="npo" id="np-nx"><b>Cierre de edición</b> · Paquetexpress, logística segura. <span class="note adm" style="color:#6b6350">📎 Para actualizar: pulsa <b>Cargar archivos</b> y adjunta los 3 Excel vigentes (Dashboard de inmovilizadas, Flota del mes y Semáforo de tractos). Después pulsa <b>⬇ Generar data.enc.json</b> y súbelo a GitHub reemplazando el anterior.</span></footer></div>`}
 /* ---------- voz ---------- */
 const SS=window.speechSynthesis;let VO=[],vsel=null,rate=.98,gen=0,idx=-1,state='stop',Q=[],paused=false;
 const lsg=k=>{try{return localStorage.getItem(k)}catch(_){return null}},lss=(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}};
@@ -1281,7 +1281,7 @@ window.npVoice=n=>{vsel=VO.find(v=>v.name===n)||vsel;lss('np_voice',n);if(state=
 window.npRate=v=>{rate=+v;lss('np_rate',v);if(state==='play')restart()};
 function jingle(){try{const A=new(window.AudioContext||window.webkitAudioContext)(),t=A.currentTime;[[523.25,0],[659.25,.16],[783.99,.32],[1046.5,.48]].forEach(([f,o])=>{const x=A.createOscillator(),g=A.createGain();x.type='triangle';x.frequency.value=f;g.gain.setValueAtTime(0,t+o);g.gain.linearRampToValueAtTime(.18,t+o+.03);g.gain.exponentialRampToValueAtTime(.001,t+o+.9);x.connect(g);g.connect(A.destination);x.start(t+o);x.stop(t+o+1)});setTimeout(()=>A.close(),1800)}catch(_){}}
 const chunks=t=>t.split(/(?<=[.!?:;])\s+/).reduce((a,s)=>{if(a.length&&(a[a.length-1].length+s.length)<150)a[a.length-1]+=' '+s;else a.push(s);return a},[]);
-function hi(i){document.querySelectorAll('.np .rd').forEach(e=>e.classList.remove('rd'));const el=document.getElementById(i<0?'np-n-1':i>=B.N.length?'np-n7':'np-n'+i);if(el){el.classList.add('rd');try{el.scrollIntoView({behavior:'smooth',block:'center'})}catch(_){}}}
+function hi(i){document.querySelectorAll('.np .rd').forEach(e=>e.classList.remove('rd'));const el=document.getElementById(i<0?'np-n-1':i>=B.N.length?'np-nx':'np-n'+i);if(el){el.classList.add('rd');try{el.scrollIntoView({behavior:'smooth',block:'center'})}catch(_){}}}
 const ui=()=>{const p=document.getElementById('npi'),l=document.getElementById('npl'),s=document.getElementById('nps2'),g=document.getElementById('npgi'),t=document.getElementById('npst');if(!p)return;p.textContent=state==='play'?(paused?'▶':'⏸'):'🔊';l.textContent=state==='play'?(paused?'Continuar':'Pausar'):'Escuchar la edición';s.style.display=state==='play'?'':'none';const n=B.N.length+2;g.style.width=state==='play'?Math.max(2,100*(idx+1)/n)+'%':'0';t.textContent=state==='play'?(idx<0?'Apertura':idx>=B.N.length?'Cierre':B.N[idx].k):'Voz de locutor · '+B.N.length+' notas';document.getElementById('npa').classList.toggle('on',state==='play')};
 function speak(text,done,g){if(g!==gen)return;const u=new SpeechSynthesisUtterance(text);u.lang=vsel?vsel.lang:'es-MX';if(vsel)u.voice=vsel;u.rate=rate;u.pitch=.9;u.volume=1;let fin=false;const nx=()=>{if(fin)return;fin=true;if(g===gen)done()};u.onend=nx;u.onerror=nx;SS.speak(u)}
 function playFrom(i0,g){const items=[{t:B.intro,i:-1},...B.N.map((n,i)=>({t:n.say,i})),{t:B.outro,i:B.N.length}].filter(x=>x.t);Q=items;let k=items.findIndex(x=>x.i>=i0);if(k<0)k=0;
@@ -1532,5 +1532,245 @@ window.usAdd=async function(){try{if(ROLE!=='admin'||!RAWK)return say('Entra com
  say('✔ Usuario "'+nm+'" agregado ('+(r==='admin'?'administrador':'consulta')+'). Ahora pulsa "⬇ Generar data.enc.json" en el menú y sube ese archivo a GitHub reemplazando el anterior.','s');
  const st=document.getElementById('pst');if(st)st.textContent='👤 Usuario nuevo pendiente: genera y sube data.enc.json';
 }catch(e){say('No se pudo agregar: '+(e.message||e),'e')}};
+})();
+</script><script>/* ===== Bloque de GASTOS de mantenimiento (por zona) ===== */
+(function(){
+const MS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],MSL=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const pl=p=>MS[+p.slice(5,7)-1]+' '+p.slice(2,4),pll=p=>MSL[+p.slice(5,7)-1]+' de '+p.slice(0,4);
+const mon=v=>(v<0?'-':'')+'$'+Math.round(Math.abs(v)).toLocaleString('es-MX');
+const mm=v=>{const a=Math.abs(v),s=v<0?'-':'';return s+'$'+(a>=1e6?(a/1e6).toFixed(a>=1e7?1:2)+' M':a>=1e4?Math.round(a/1e3)+' mil':Math.round(a).toLocaleString('es-MX'))};
+const sp=(v,p)=>(v>0?'+':v<0?'-':'')+Math.abs(v).toFixed(p==null?1:p);
+const CLS={P:['Preventivo','#2f6bff'],C:['Correctivo','#ef4444'],O:['Otros / insumos','#f59e0b']};
+const clsOf=n=>/CORRECTIV/.test(n)?'C':/PREV/.test(n)?'P':'O';
+const isEc=u=>/^(M\d{5,7}|\d{3,})$/.test(u);
+const nz=s=>String(s==null?'':s).replace(/\s+/g,' ').trim().toUpperCase();
+const MAT='MATRIZ / GENERAL (sin económico)',FUERA='FUERA DE INVENTARIO',SZ='SIN ZONA (Flota sin región)';const zn=z=>String(z).replace(/^CENTRO [12]$/,'CENTRO');
+let GX=null,GXR=[],UI=new Map(),INV={z:new Map(),t:new Map(),all:0},GK=null;
+const $g=id=>document.getElementById(id);
+
+/* ---------- construcción en memoria ---------- */
+function gxBuild(){GX=null;GXR=[];UI=new Map();INV={z:new Map(),t:new Map(),all:0};GK=null;
+ const g=D&&D.gx;if(D&&D.gk)GK=D.gk;if(!g||!g.r||!g.r.length)return;
+ const segReg=new Map();SEG.forEach(x=>{if(x.reg&&x.reg!=='SIN REGIÓN'){const k=N(x.e),o=segReg.get(k);if(!o||(x.i||'')>o.i)segReg.set(k,{i:x.i||'',r:x.reg})}});
+ const dsc=g.ds||[];const unIdx=new Map(g.un.map((u,i)=>[u,i]));
+ const info=u=>{let o=UI.get(u);if(o)return o;const k=N(u),f=FLM.get(k),ix=unIdx.get(u),d=ix!=null&&dsc[ix]?nz(dsc[ix]):'',mat=!isEc(u);let z,t;
+  if(mat){z=MAT;t='SIN UNIDAD (general / taller)'}
+  else if(f){z=zn(f.r?cr(f.r):((segReg.get(k)||{}).r||SZ));t=[f.v,f.ma,f.mo].filter(Boolean).map(nz).join(' ')||d||'SIN DESCRIPCIÓN'}
+  else{z=zn((segReg.get(k)||{}).r||FUERA);t=d||'SIN DESCRIPCIÓN'}
+  o={u,z,t,mat,inv:!!f,e:f?f.e:u};UI.set(u,o);return o};
+ const kc=g.cu.map(clsOf);
+ GXR=g.r.map(a=>{const u=g.un[a[1]],o=info(u);return{p:g.pe[a[0]],u,c:g.cu[a[2]],k:kc[a[2]],m:a[3],n:a[4],z:o.z,t:o.t,mat:o.mat}});
+ FL.forEach(f=>{const o=info(String(f.e).trim().toUpperCase());INV.all++;INV.z.set(o.z,(INV.z.get(o.z)||0)+1);INV.t.set(o.t,(INV.t.get(o.t)||0)+1)});
+ const pe=g.pe.slice().sort(),cnt=g.nr||{},last=pe[pe.length-1],prev=pe.slice(-4,-1).map(p=>cnt[p]||0).sort((a,b)=>a-b),med=prev.length?prev[prev.length>>1]:0;
+ const parc=new Set();if(last&&med&&(cnt[last]||0)<.7*med)parc.add(last);
+ GX={pe,parc,g};
+ if(!S.gd||!pe.includes(S.gd)||!pe.includes(S.gh)){S.gh=last;S.gd=pe.find(p=>p>=last.slice(0,4)+'-01')||pe[0];S.gcl='T';S.gmz=true;S.gz='';S.gcu='';S.gA='';S.gB=''}
+}
+const _ing=window.ingest;window.ingest=function(){const r=_ing.apply(this,arguments);try{gxBuild()}catch(e){console.warn('gx',e)}return r};
+
+/* ---------- filtros y agregaciones ---------- */
+function rows(o){o=o||{};const a=S.gd,b=S.gh;return GXR.filter(r=>(o.per||(r.p>=a&&r.p<=b))&&(o.nocls||S.gcl==='T'||r.k===S.gcl)&&(S.gmz||!r.mat)&&(o.nozone||!S.gz||r.z===S.gz)&&(o.nocu||!S.gcu||r.c===S.gcu))}
+function agg(rs,kf){const m=new Map();rs.forEach(r=>{const k=kf(r);let o=m.get(k);if(!o)m.set(k,o={k,m:0,P:0,C:0,O:0,n:0,u:new Set()});o.m+=r.m;o[r.k]+=r.m;o.n+=r.n;if(!r.mat)o.u.add(r.u)});return[...m.values()]}
+const tot=rs=>{let m=0,P=0,C=0,O=0;rs.forEach(r=>{m+=r.m;if(r.k==='P')P+=r.m;else if(r.k==='C')C+=r.m;else O+=r.m});return{m,P,C,O}};
+const per=()=>GX.pe.filter(p=>p>=S.gd&&p<=S.gh);
+const ptag=p=>pl(p)+(GX.parc.has(p)?'*':'');
+window.gxSet=(k,v)=>{S[k]=v;if(k==='gd'&&S.gh<S.gd)S.gh=S.gd;if(k==='gh'&&S.gd>S.gh)S.gd=S.gh;R()};
+window.gxZ=z=>{S.gz=S.gz===z?'':z;R()};window.gxC=c=>{S.gcu=S.gcu===c?'':c;R()};
+window.gxClear=()=>{S.gz='';S.gcu='';S.gcl='T';S.gmz=true;R()};
+const nodata=()=>`<h2>Gastos de mantenimiento</h2><p class="sub">Aún no hay bases de gasto cargadas.</p><div class="card"><h3>Cómo cargar los gastos</h3><p>Entra como administrador, pulsa <b>📎 Cargar archivos</b> y adjunta los Excel de <b>Gasto de Mtto Logística</b> (Oracle Fusion · hoja “Detalle”). Puedes cargar los de varios años a la vez; al cargar uno nuevo se agrega a lo anterior y los meses repetidos no se duplican. Después pulsa <b>⬇ Generar data.enc.json</b> y súbelo a GitHub.</p></div>`;
+
+/* ---------- barra de filtros ---------- */
+function bar(){const opt=(v,s)=>GX.pe.map(p=>`<option value="${p}" ${p===v?'selected':''}>${pl(p)}${GX.parc.has(p)?' (parcial)':''}</option>`).join('');
+ const ch=(k,v,l)=>`<span class="chip ${S[k]===v?'on':''}" onclick="gxSet('${k}','${v}')">${l}</span>`;
+ const x=(t,fn)=>`<span class="chip on" onclick="${fn}" title="Quitar este filtro">${esc(t)} ✕</span>`;
+ return `<div class="fbar"><b>Desde</b><select onchange="gxSet('gd',this.value)">${opt(S.gd)}</select><b>Hasta</b><select onchange="gxSet('gh',this.value)">${opt(S.gh)}</select>
+ <b>Tipo de gasto</b>${ch('gcl','T','Todos')}${ch('gcl','P','Preventivo')}${ch('gcl','C','Correctivo')}${ch('gcl','O','Otros / insumos')}</div>
+ <div class="fbar"><b>Matriz</b><span class="chip ${S.gmz?'on':''}" onclick="gxSet('gmz',${!S.gmz})" title="Matriz = gasto que no se puede asignar a un económico (general, talleres, sin unidad)">Incluir gastos de Matriz</span>${S.gz?x('Zona: '+S.gz,"gxZ('')"):''}${S.gcu?x('Cuenta: '+S.gcu,"gxC('')"):''}${(S.gz||S.gcu||S.gcl!=='T'||!S.gmz)?'<button class="fclr" onclick="gxClear()">✕ Limpiar filtros</button>':''}
+ <span class="note">Preventivo / correctivo según el nombre de la cuenta contable. Clic en una zona o cuenta para filtrar todo el bloque.</span></div>`}
+
+/* ---------- gráficas ---------- */
+function stackCols(ps,by){const W=1000,H=250,pb=34,p0=40,mx=Math.max(1,...ps.map(p=>(by.get(p)||{m:0}).m)),bw=Math.min(54,(W-p0)/ps.length-8),gw=(W-p0)/ps.length;
+ return `<div class="lg">${['P','C','O'].map(k=>`<span><s style="background:${CLS[k][1]}"></s>${CLS[k][0]}</span>`).join('')}</div><svg viewBox="0 0 ${W} ${H+pb}" width="100%" style="overflow:visible">`+[0,.5,1].map(t=>`<line x1="${p0}" x2="${W}" y1="${H-(H-14)*t}" y2="${H-(H-14)*t}" stroke="var(--bd)"/><text x="0" y="${H-(H-14)*t+3}" font-size="10" fill="var(--mu)">${mm(mx*t)}</text>`).join('')+
+ ps.map((p,i)=>{const o=by.get(p)||{P:0,C:0,O:0,m:0},x=p0+i*gw+(gw-bw)/2;let y=H;const seg=['P','C','O'].map(k=>{const h=(H-14)*Math.max(0,o[k])/mx;y-=h;return `<rect x="${x}" y="${y}" width="${bw}" height="${Math.max(0,h)}" fill="${CLS[k][1]}"><title>${pl(p)} · ${CLS[k][0]}: ${mon(o[k])}</title></rect>`}).join('');
+  return `<g style="cursor:pointer" onclick="gxSet('gB','${p}')">${seg}<text x="${x+bw/2}" y="${y-5}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--tx)">${mm(o.m)}</text><text x="${x+bw/2}" y="${H+15}" text-anchor="middle" font-size="11" fill="var(--mu)">${ptag(p)}</text></g>`}).join('')+'</svg>'}
+const pbar=(a,b,c,d)=>{const t=a+b+c||1;return `<div style="display:flex;height:9px;border-radius:5px;overflow:hidden;min-width:90px"><i style="width:${100*a/t}%;background:${CLS.P[1]}"></i><i style="width:${100*b/t}%;background:${CLS.C[1]}"></i><i style="width:${100*c/t}%;background:${CLS.O[1]}"></i></div>`};
+
+/* ---------- pantalla principal ---------- */
+function TG(){if(!GX)return nodata();
+ const rs=rows(),T=tot(rs),ps=per(),by=new Map(agg(rs,r=>r.p).map(o=>[o.k,o]));
+ const nU=new Set(rs.filter(r=>!r.mat).map(r=>r.u)).size,gU=sum(rs.filter(r=>!r.mat),r=>r.m),mat=sum(rs.filter(r=>r.mat),r=>r.m);
+ const pk=[...by.values()].sort((a,b)=>b.m-a.m)[0],full=ps.filter(p=>!GX.parc.has(p));
+ const zs=agg(rs,r=>r.z).sort((a,b)=>b.m-a.m),cs=agg(rs,r=>r.c).sort((a,b)=>b.m-a.m),ts=agg(rs.filter(r=>!r.mat),r=>r.t).sort((a,b)=>b.m-a.m);
+ const inz=z=>INV.z.get(z)||0,int=t=>INV.t.get(t)||0;
+ const pv=pvRows();
+ return `<h2>Gastos de mantenimiento · por zona</h2><p class="sub">Gasto de mantenimiento de la flota logística (Oracle Fusion) del ${pl(S.gd)} al ${pl(S.gh)}${GX.parc.has(S.gh)?' · el último mes (*) es parcial':''}.</p>${bar()}
+ <div class="grid g4">${kp(mm(T.m),'gasto total del periodo')}${kp(mm(T.P),'preventivo · '+pc(T.P,T.m),'')}${kp(mm(T.C),'correctivo · '+pc(T.C,T.m),'r')}${kp(mm(gU/Math.max(1,INV.all)),'gasto por unidad del inventario ('+fmt(INV.all)+' unidades)','a')}</div>
+ <div class="grid g4" style="margin-top:0">${kp(mm(T.O),'otros / insumos (urea, accesorios, lavado) · '+pc(T.O,T.m))}${kp(mm(full.length?T.m/Math.max(1,ps.filter(p=>by.has(p)&&!GX.parc.has(p)).length):0),'promedio mensual (meses completos)')}${kp(pk?pl(pk.k):'–','mes de mayor gasto · '+(pk?mm(pk.m):''),'a')}${kp(mm(mat),'gasto de Matriz / general · '+pc(mat,T.m)+(S.gmz?'':' (excluido)'))}</div>
+ ${varPanel()}
+ <div class="card"><h3>Gasto mensual · preventivo vs correctivo</h3>${stackCols(ps,by)}<p class="note">Clic en un mes para compararlo contra el anterior en “¿Por qué cambió el gasto?”. ${GX.parc.size?'* mes parcial (menos movimientos que los meses anteriores).':''}</p></div>
+ <div class="card"><h3>Gasto por zona</h3><p class="hint"><span>👆</span> Haz clic en una zona para filtrar todo el bloque</p>${tbl(['Zona','Gasto','% del total','Unidades con gasto','Unidades en inventario','Gasto por unidad','Preventivo','Correctivo','Otros','% correctivo','Mezcla'],zs.map(o=>{const iz=inz(o.k),u=o.u.size;return `<tr class="c" onclick="gxZ(this.dataset.z)" data-z="${esc(o.k)}" style="${S.gz===o.k?'background:var(--bg2)':''}"><td><b>${esc(o.k)}</b></td><td>${mon(o.m)}</td><td>${pc(o.m,T.m)}</td><td>${o.k===MAT?'–':u}</td><td>${o.k===MAT||!iz?'–':iz}</td><td>${o.k===MAT||!iz?'–':mon(o.m/iz)}</td><td>${mm(o.P)}</td><td>${mm(o.C)}</td><td>${mm(o.O)}</td><td>${pc(o.C,o.m)}</td><td>${pbar(o.P,o.C,o.O)}</td></tr>`}).concat(`<tr><td><b>TOTAL</b></td><td><b>${mon(T.m)}</b></td><td><b>100%</b></td><td><b>${nU}</b></td><td><b>${INV.all}</b></td><td><b>${mon(gU/Math.max(1,INV.all))}</b></td><td><b>${mm(T.P)}</b></td><td><b>${mm(T.C)}</b></td><td><b>${mm(T.O)}</b></td><td><b>${pc(T.C,T.m)}</b></td><td></td></tr>`))}
+ <p class="note">La zona es la <b>región del económico según la Flota</b> (para unidades sin región se usa la de su último seguimiento). “Fuera de inventario” = económicos con gasto que ya no aparecen en la Flota cargada; “Matriz / general” = gasto sin económico (talleres, generales).</p></div>
+ <div class="grid g2"><div class="card"><h3>Gasto por zona</h3>${hbar(zs.map(o=>({k:o.k,v:o.m,c:o.k===MAT||o.k===FUERA||o.k===SZ?'#94a3b8':'var(--pr)'})),mm)}</div><div class="card"><h3>Gasto por cuenta (concepto) · top 12</h3>${hbar(cs.slice(0,12).map(o=>({k:o.k,v:o.m,c:CLS[clsOf(o.k)][1]})),mm)}</div></div>
+ <div class="card"><h3>Cuentas contables</h3><p class="hint"><span>👆</span> Clic en una cuenta para filtrar</p>${tbl(['Cuenta','Clase','Gasto','% del total','Movimientos','Preventivo/Correctivo'],cs.slice(0,20).map(o=>`<tr class="c" onclick="gxC(this.dataset.c)" data-c="${esc(o.k)}"><td><b>${esc(o.k)}</b></td><td><span class="tag" style="background:${CLS[clsOf(o.k)][1]}22;color:${CLS[clsOf(o.k)][1]}">${CLS[clsOf(o.k)][0]}</span></td><td>${mon(o.m)}</td><td>${pc(o.m,T.m)}</td><td>${fmt(o.n)}</td><td>${pbar(o.P,o.C,o.O)}</td></tr>`))}</div>
+ <div class="card"><h3>Gasto por tipo de unidad (modelo del inventario)</h3><p class="note" style="margin-top:0">Vehículo · marca · modelo tomados de la Flota; si la unidad ya no está en la Flota se usa la descripción de la base de gasto. “Índice” = % del gasto ÷ % de la flota (arriba de 1 = gasta más de lo que pesa en la flota).</p>${tbl(['Tipo de unidad','Unidades en inventario','% de la flota','Gasto','% del gasto','Gasto por unidad','Índice','Correctivo'],ts.slice(0,15).map(o=>{const n=int(o.k),pf=INV.all?n/INV.all:0,pg=gU?o.m/gU:0;return `<tr><td><b>${esc(o.k)}</b></td><td>${n||'–'}</td><td>${n?(100*pf).toFixed(1)+'%':'–'}</td><td>${mon(o.m)}</td><td>${(100*pg).toFixed(1)}%</td><td>${n?mon(o.m/n):'–'}</td><td>${n&&pf?'<span class="tag '+(pg/pf>1.25?'r':pg/pf<.8?'g':'a')+'">'+(pg/pf).toFixed(2)+'</span>':'–'}</td><td>${pc(o.C,o.m)}</td></tr>`}))}</div>
+ <div class="card"><h3>Proveedores · concentración del gasto</h3>${pv.length?`<div class="grid g2"><div>${hbar(pv.slice(0,10).map(o=>({k:o.k,v:o.m,c:'var(--pr)'})),mm)}</div><div><div class="kpiL">${kp(pc(sum(pv.slice(0,3),o=>o.m),sum(pv,o=>o.m)),'del gasto está en los 3 primeros proveedores','a')}${kp(pv.length,'proveedores con gasto en el periodo')}</div><p class="note">Proveedores respetan fechas y tipo de gasto; no se dividen por zona ni Matriz.</p></div></div>`:'<p class="note">Sin datos de proveedor.</p>'}</div>
+ <div class="card"><h3>Salidas</h3><div class="fbar" style="border:0;box-shadow:none;padding:0"><button class="chip" onclick="gxXlsx()">📥 Descargar Excel del bloque</button><button class="chip" onclick="gxDeck()">📽 Presentación de gastos</button><button class="chip" onclick="waOpen()">💬 Resumen para WhatsApp</button></div></div>`}
+
+function pvRows(){const g=GX.g,pe=g.pe,m=new Map();(g.p||[]).forEach(a=>{const p=pe[a[0]];if(p<S.gd||p>S.gh)return;const cl=['P','C','O'][a[2]];if(S.gcl!=='T'&&cl!==S.gcl)return;const n=g.pv[a[1]];m.set(n,(m.get(n)||0)+a[3])});return[...m].map(([k,v])=>({k,m:v})).sort((a,b)=>b.m-a.m)}
+
+/* ---------- ¿Por qué cambió el gasto? ---------- */
+function varPanel(){const ps=per(),full=ps.filter(p=>!GX.parc.has(p));let B=S.gB&&GX.pe.includes(S.gB)?S.gB:(full[full.length-1]||ps[ps.length-1]);
+ const ix=GX.pe.indexOf(B);let A=S.gA&&GX.pe.includes(S.gA)&&S.gA!==B?S.gA:(ix>0?GX.pe[ix-1]:'');
+ if(!A)return '';
+ const rA=rows({per:1}).filter(r=>r.p===A),rB=rows({per:1}).filter(r=>r.p===B),tA=tot(rA),tB=tot(rB),d=tB.m-tA.m;
+ const cmp=kf=>{const m=new Map();rA.forEach(r=>{const k=kf(r);m.set(k,(m.get(k)||0)-r.m)});rB.forEach(r=>{const k=kf(r);m.set(k,(m.get(k)||0)+r.m)});return[...m].map(([k,v])=>({k,v})).filter(o=>Math.abs(o.v)>=1).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v))};
+ const bz=cmp(r=>r.z),bc=cmp(r=>r.c),bu=cmp(r=>r.mat?'(general / sin unidad)':r.u);
+ const dir=d>=0?'subió':'bajó',sg=d>=0?1:-1,top=a=>a.filter(o=>o.v*sg>0).slice(0,3);
+ const part=a=>top(a).map(o=>`<b>${esc(o.k)}</b> (${sp(o.v/1e6,2)} M)`).join(', ');
+ const opt=(v)=>GX.pe.map(p=>`<option value="${p}" ${p===v?'selected':''}>${pl(p)}${GX.parc.has(p)?' (parcial)':''}</option>`).join('');
+ const dP=tB.P-tA.P,dC=tB.C-tA.C,dO=tB.O-tA.O;
+ const list=(a)=>`<table><tr><th>Concepto</th><th>Cambio</th></tr>${a.slice(0,6).map(o=>`<tr><td>${esc(o.k)}</td><td><b style="color:${o.v>0?'var(--rd)':'var(--gn)'}">${o.v>0?'▲ +':'▼ −'}${mon(Math.abs(o.v))}</b></td></tr>`).join('')||'<tr><td colspan="2">Sin cambios</td></tr>'}</table>`;
+ return `<div class="card" style="border-left:5px solid var(--ac)"><h3>¿Por qué ${d>=0?'subió':'bajó'} el gasto?</h3><div class="fbar" style="border:0;box-shadow:none;padding:0 0 8px"><b>Comparar</b><select onchange="gxSet('gA',this.value)">${opt(A)}</select><b>contra</b><select onchange="gxSet('gB',this.value)">${opt(B)}</select></div>
+ <p class="big" style="margin:4px 0 10px;font-size:15px;line-height:1.5">En <b>${pll(B)}</b> el gasto fue de <b>${mon(tB.m)}</b>, <b style="color:${d>=0?'var(--rd)':'var(--gn)'}">${d>=0?'+':'−'}${mon(Math.abs(d))} (${tA.m?sp(100*d/tA.m)+'%':'–'})</b> frente a ${pll(A)} (${mon(tA.m)}). ${GX.parc.has(B)||GX.parc.has(A)?'<i>Ojo: uno de los meses es parcial.</i> ':''}${part(bc)?`Lo que más ${d>=0?'empujó al alza':'lo bajó'}: <b>cuentas</b> ${part(bc)}; <b>zonas</b> ${part(bz)||'—'}; <b>unidades</b> ${top(bu).map(o=>`<b>${esc(o.k)}</b> (${sp(o.v/1e3,0)} mil)`).join(', ')||'—'}. `:''}Por tipo: preventivo ${dP>=0?'+':'−'}${mm(Math.abs(dP))}, correctivo ${dC>=0?'+':'−'}${mm(Math.abs(dC))}, otros ${dO>=0?'+':'−'}${mm(Math.abs(dO))}.</p>
+ <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px"><div><b style="font-size:12px;color:var(--mu)">POR ZONA</b>${list(bz)}</div><div><b style="font-size:12px;color:var(--mu)">POR CUENTA</b>${list(bc)}</div><div><b style="font-size:12px;color:var(--mu)">POR UNIDAD</b>${list(bu)}</div></div></div>`}
+
+/* ---------- Evaluación de móviles ---------- */
+function ev(){const ps=per(),a=S.gd+'-01';
+ const end=(()=>{const y=+S.gh.slice(0,4),m=+S.gh.slice(5,7),d=new Date(Date.UTC(y,m,0)).getUTCDate();const e=S.gh+'-'+String(d).padStart(2,'0');return e>S.corte?S.corte:e})();
+ const ndays=Math.max(1,dd(a,end)+1);
+ const rs=rows({nocls:1}).filter(r=>!r.mat),U=new Map();
+ rs.forEach(r=>{let o=U.get(r.u);if(!o)U.set(r.u,o={u:r.u,z:r.z,t:r.t,m:0,C:0,P:0,O:0,fc:0,fp:0,mes:new Set(),ev:0,dias:0});o.m+=r.m;o[r.k]+=r.m;if(r.k==='C')o.mes.add(r.p)});
+ const g=GX.g;(g.ot||[]).forEach(x=>{const p=g.pe[x[0]];if(p<S.gd||p>S.gh)return;const u=g.un[x[1]],o=U.get(u);if(o){o.fp+=x[2];o.fc+=x[3]}});
+ SEG.forEach(x=>{if(!x.i)return;const o=U.get(String(x.e).trim().toUpperCase());if(!o)return;const s=x.i<a?a:x.i,e2=(x.o&&x.o<end)?x.o:end;if(e2<s)return;o.ev++;o.dias+=dd(s,e2)+1});
+ let L=[...U.values()].filter(o=>o.m>0);L.forEach(o=>{o.cd=o.m/ndays;o.cdd=o.dias?o.C/o.dias:0});
+ const srt=a2=>a2.slice().sort((x,y)=>x-y),q=(arr,p)=>{const s=srt(arr);return s.length?s[Math.min(s.length-1,Math.floor(p*s.length))]:0};
+ const q75c=q(L.map(o=>o.C),.9),q75f=q(L.map(o=>o.fc),.75);
+ L.forEach(o=>{o.pr=(o.C>=q75c&&o.fc>=Math.max(2,q75f))||o.ev>=4});
+ return{L,ndays,end,q75c,q75f}}
+window.gxUnit=u=>{const rs=GXR.filter(r=>r.u===u&&r.p>=S.gd&&r.p<=S.gh);let m=document.getElementById('gxum');if(!m){m=document.createElement('div');m.id='gxum';m.className='pqmod';document.body.appendChild(m);m.onclick=e=>{if(e.target===m)m.classList.remove('on')}}
+ const ps=per(),by=new Map(agg(rs,r=>r.p).map(o=>[o.k,o])),cs=agg(rs,r=>r.c).sort((a,b)=>b.m-a.m),T=tot(rs),o0=UI.get(u)||{},evs=SEG.filter(x=>x.i&&String(x.e).trim().toUpperCase()===u);
+ m.innerHTML=`<div class="pqbx" style="max-width:860px"><div class="pqhd"><b>🔧 ${esc(u)} · ${esc(o0.t||'')}</b><span class="pqx" onclick="document.getElementById('gxum').classList.remove('on')">✕</span></div><div style="padding:12px 16px;overflow:auto;max-height:76vh"><p class="note" style="margin-top:0">Zona ${esc(o0.z||'')} · ${pl(S.gd)} a ${pl(S.gh)} · ${evs.length} inmovilizaciones registradas</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">${kp(mon(T.m),'gasto total')}${kp(mon(T.C),'correctivo · '+pc(T.C,T.m),'r')}${kp(mon(T.P),'preventivo')}</div>${stackCols(ps,by)}<h4>Por cuenta</h4>${tbl(['Cuenta','Gasto','Movimientos'],cs.map(o=>`<tr><td>${esc(o.k)}</td><td>${mon(o.m)}</td><td>${o.n}</td></tr>`))}<p><button class="chip on" onclick="document.getElementById('gxum').classList.remove('on');try{f360('${esc(u)}')}catch(e){}">Ficha 360 de la unidad</button></p></div></div>`;m.classList.add('on')};
+function TEv(){if(!GX)return nodata();const {L,ndays,end,q75c,q75f}=ev();const pr=L.filter(o=>o.pr).sort((a,b)=>b.C-a.C),show=(S.gpr===0?L.slice().sort((a,b)=>b.C-a.C):pr).slice(0,50);
+ const mod=new Map();L.forEach(o=>{let x=mod.get(o.t);if(!x)mod.set(o.t,x={k:o.t,u:0,up:0,fc:0,C:0,dias:0,m:0});x.u++;if(o.pr)x.up++;x.fc+=o.fc;x.C+=o.C;x.dias+=o.dias;x.m+=o.m});
+ const mods=[...mod.values()].filter(x=>x.u>=3).sort((a,b)=>b.C/b.u-a.C/a.u).slice(0,12);
+ return `<h2>Evaluación de móviles · unidades problema</h2><p class="sub">Unidades con gasto del ${pl(S.gd)} al ${pl(S.gh)} que combinan mucho gasto correctivo, fallas (OT correctivas), reincidencia y días detenidos.</p>${bar()}
+ <div class="grid g4">${kp(fmt(L.length),'unidades con gasto (sin Matriz)')}${kp(fmt(pr.length),'unidades problema','r')}${kp(mm(sum(pr,o=>o.C)),'correctivo de las unidades problema · '+pc(sum(pr,o=>o.C),sum(L,o=>o.C)),'r')}${kp(fmt(sum(pr,o=>o.dias)),'días detenidos de esas unidades (seguimiento)','a')}</div>
+ <p class="note" style="margin:0 0 12px"><b>Criterio de “unidad problema”</b>: correctivo en el 10% más alto (desde ${mon(q75c)}) <u>y</u> al menos ${Math.max(2,q75f)} fallas (OT correctivas), <u>o</u> 4 o más inmovilizaciones en el periodo. Costo diario = gasto ÷ ${ndays} días del periodo.</p>
+ <div class="fbar"><b>Mostrar</b><span class="chip ${S.gpr!==0?'on':''}" onclick="S.gpr=1;R()">Solo unidades problema</span><span class="chip ${S.gpr===0?'on':''}" onclick="S.gpr=0;R()">Top por correctivo (todas)</span></div>
+ <div class="card"><h3>Móviles problema (top 50)</h3><p class="hint"><span>👆</span> Clic en una unidad para ver su gasto por mes y cuenta</p>${tbl(['Económico','Modelo','Zona','Fallas (OT corr.)','Meses con correctivo','Inmovilizaciones','Días detenidos','Gasto correctivo','Gasto total','Costo diario','Costo por día detenido'],show.map(o=>`<tr class="c" onclick="gxUnit(this.dataset.u)" data-u="${esc(o.u)}"><td><b>${esc(o.u)}</b> ${o.pr?'<span class="tag r">problema</span>':''}</td><td>${esc(o.t)}</td><td>${esc(o.z)}</td><td>${o.fc}</td><td>${o.mes.size}</td><td>${o.ev}</td><td>${o.dias}</td><td>${mon(o.C)}</td><td>${mon(o.m)}</td><td>${mon(o.cd)}</td><td>${o.dias?mon(o.cdd):'–'}</td></tr>`))}</div>
+ <div class="card"><h3>Modelos con mayor correctivo por unidad</h3>${tbl(['Modelo / tipo','Unidades con gasto','Unidades problema','Fallas por unidad','Correctivo por unidad','Días detenidos por unidad'],mods.map(x=>`<tr><td><b>${esc(x.k)}</b></td><td>${x.u}</td><td>${x.up} (${pc(x.up,x.u)})</td><td>${(x.fc/x.u).toFixed(1)}</td><td>${mon(x.C/x.u)}</td><td>${(x.dias/x.u).toFixed(1)}</td></tr>`))}<p class="note">Solo modelos con 3 o más unidades con gasto.</p></div>`}
+
+/* ---------- Costos por KM ---------- */
+function kmOf(u){const o=GK&&GK.k&&GK.k[u];if(!o)return 0;let s=0;Object.keys(o).forEach(p=>{if(p==='*'||(p>=S.gd&&p<=S.gh))s+=o[p]});return s}
+function TKm(){if(!GX)return nodata();
+ const has=GK&&GK.k&&Object.keys(GK.k).length;
+ if(!has)return `<h2>Costos por KM</h2><p class="sub">Gasto de mantenimiento entre kilómetros recorridos.</p>${bar()}<div class="card"><h3>Falta cargar los kilometrajes</h3><p>Para calcular <b>$ por kilómetro</b> hace falta el kilometraje por económico, que sale del portal de combustible. Entra como administrador, pulsa <b>📎 Cargar archivos</b> y adjunta un Excel con columnas <b>Económico</b> y <b>Kilómetros</b> (opcional: <b>Periodo</b> o <b>Mes</b>, para que respete el rango de fechas). Después genera y sube el data.enc.json.</p><p class="note">Mientras tanto, el gasto por unidad, por modelo y por zona está en la pantalla de Gastos y en la Evaluación de móviles.</p></div>`;
+ const rs=rows().filter(r=>!r.mat),U=agg(rs,r=>r.u).map(o=>({...o,km:kmOf(o.k),t:(UI.get(o.k)||{}).t,z:(UI.get(o.k)||{}).z})).filter(o=>o.km>0);
+ const tm=sum(U,o=>o.m),tk=sum(U,o=>o.km),grp=kf=>{const m=new Map();U.forEach(o=>{const k=kf(o);let x=m.get(k);if(!x)m.set(k,x={k,m:0,km:0,u:0,C:0});x.m+=o.m;x.km+=o.km;x.u++;x.C+=o.C});return[...m.values()].sort((a,b)=>b.m/b.km-a.m/a.km)};
+ const gz=grp(o=>o.z),gt=grp(o=>o.t).filter(x=>x.u>=3).slice(0,12),med=U.slice().sort((a,b)=>a.m/a.km-b.m/b.km)[U.length>>1];
+ return `<h2>Costos por KM</h2><p class="sub">Gasto de mantenimiento ÷ kilómetros recorridos, del ${pl(S.gd)} al ${pl(S.gh)}. Solo unidades con kilometraje cargado.</p>${bar()}
+ <div class="grid g4">${kp('$'+(tm/tk).toFixed(2),'por kilómetro (flota con km)')}${kp('$'+(sum(U,o=>o.C)/tk).toFixed(2),'correctivo por km','r')}${kp('$'+(sum(U,o=>o.P)/tk).toFixed(2),'preventivo por km')}${kp(fmt(tk),'kilómetros considerados · '+U.length+' unidades','a')}</div>
+ <div class="grid g2"><div class="card"><h3>$ por km por zona</h3>${hbar(gz.map(x=>({k:x.k,v:x.m/x.km,c:'var(--pr)'})),v=>'$'+v.toFixed(2))}</div><div class="card"><h3>$ por km por modelo</h3>${hbar(gt.map(x=>({k:x.k,v:x.m/x.km,c:'var(--ac)'})),v=>'$'+v.toFixed(2))}</div></div>
+ <div class="card"><h3>Unidades con mayor costo por km</h3><p class="hint"><span>👆</span> Clic en una unidad para ver su detalle</p>${tbl(['Económico','Modelo','Zona','Km','Gasto','$ por km','Correctivo por km'],U.slice().sort((a,b)=>b.m/b.km-a.m/a.km).slice(0,40).map(o=>`<tr class="c" onclick="gxUnit(this.dataset.u)" data-u="${esc(o.k)}"><td><b>${esc(o.k)}</b></td><td>${esc(o.t)}</td><td>${esc(o.z)}</td><td>${fmt(o.km)}</td><td>${mon(o.m)}</td><td>$${(o.m/o.km).toFixed(2)}</td><td>$${(o.C/o.km).toFixed(2)}</td></tr>`))}</div>`}
+
+/* ---------- texto resumen (WhatsApp, Gaceta, Hallazgos) ---------- */
+function sum2(){if(!GX)return null;const full=GX.pe.filter(p=>!GX.parc.has(p)),B=full[full.length-1],A=full[full.length-2],all=GXR;
+ const bm=p=>all.filter(r=>r.p===p),tB=tot(bm(B)),tA=A?tot(bm(A)):null,zb=agg(bm(B),r=>r.z).sort((a,b)=>b.m-a.m),cb=agg(bm(B),r=>r.c).sort((a,b)=>b.m-a.m);
+ const cy=B.slice(0,4),ytd=tot(all.filter(r=>r.p.slice(0,4)===cy&&r.p<=B)),py=tot(all.filter(r=>r.p.slice(0,4)===String(+cy-1)&&r.p.slice(5)<=B.slice(5)));
+ // qué cambió más vs mes anterior
+ let drv=null;if(A){const m=new Map();bm(A).forEach(r=>m.set(r.c,(m.get(r.c)||0)-r.m));bm(B).forEach(r=>m.set(r.c,(m.get(r.c)||0)+r.m));drv=[...m].map(([k,v])=>({k,v})).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v))[0]}
+ const zz=zb.filter(o=>o.k!==MAT&&o.k!==FUERA&&o.k!==SZ);
+ return{B,A,tB,tA,zb,cb,zz,ytd,py,cy,drv,parcial:GX.parc.has(GX.pe[GX.pe.length-1])?GX.pe[GX.pe.length-1]:''}}
+window.gxWa=function(t){try{const s=sum2();if(s){const d=s.tA?s.tB.m-s.tA.m:0;t+=`\n\n💰 *Gasto de mantenimiento ${pl(s.B)}:* ${mm(s.tB.m)}${s.tA?` (${d>=0?'▲':'▼'} ${sp(100*d/s.tA.m)}% vs ${pl(s.A)})`:''}\n• Preventivo ${pc(s.tB.P,s.tB.m)} · Correctivo ${pc(s.tB.C,s.tB.m)}\n• Acumulado ${s.cy}: ${mm(s.ytd.m)}${s.py.m?` (${sp(100*(s.ytd.m-s.py.m)/s.py.m)}% vs mismo periodo ${+s.cy-1})`:''}\n`+s.zz.slice(0,3).map(o=>`• ${o.k}: ${mm(o.m)}`).join('\n')+(s.drv?`\n• Mayor cambio: ${s.drv.k} (${s.drv.v>=0?'+':'−'}${mm(Math.abs(s.drv.v))})`:'')}}catch(e){console.warn(e)}return t};
+const jcols=(rows,c,H)=>{const mx=Math.max(1,...rows.map(r=>r.v)),W=1120,bw=Math.min(52,W/rows.length-10);return `<svg viewBox="0 0 ${W} ${H+46}" width="100%">${rows.map((r,i)=>{const x=i*(W/rows.length)+(W/rows.length-bw)/2,h=Math.max(2,(H-36)*r.v/mx);return `<g><rect x="${x}" y="${H-h}" width="${bw}" height="${h}" rx="5" fill="${c}"/><text x="${x+bw/2}" y="${H-h-8}" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">${mm(r.v)}</text><text x="${x+bw/2}" y="${H+22}" text-anchor="middle" fill="#b6c8ee" font-size="14">${esc(r.k)}</text></g>`}).join('')}</svg>`};
+window.gxJ=function(out){try{const s=sum2();if(s){const E2=esc,mx=s.zz[0]?s.zz[0].m:1,d=s.tA?s.tB.m-s.tA.m:0;
+ const ps=GX.pe.slice(-12),by=new Map(agg(GXR.filter(r=>ps.includes(r.p)),r=>r.p).map(o=>[o.k,o]));
+ out.push(['Gasto de mantenimiento · '+pl(s.B),`<div class="jg3"><div class="jk" style="grid-template-columns:1fr 1fr"><div><b style="color:#7ab8ff">${mm(s.tB.m)}</b><span>gasto del mes${s.tA?' ('+(d>=0?'▲ ':'▼ ')+sp(100*d/s.tA.m)+'% vs mes anterior)':''}</span></div><div><b style="color:#ff8593">${pc(s.tB.C,s.tB.m)}</b><span>correctivo del gasto</span></div><div><b style="color:#36d08a">${mm(s.ytd.m)}</b><span>acumulado ${s.cy}</span></div><div><b style="color:#ffb84d">${s.zz[0]?E2(s.zz[0].k):'–'}</b><span>zona con más gasto · ${s.zz[0]?mm(s.zz[0].m):''}</span></div></div><div class="jcol">${jcols(ps.map(p=>({k:pl(p),v:(by.get(p)||{m:0}).m})),'#4f8cff',230)}<div class="jn">Gasto mensual de mantenimiento (últimos 12 meses)</div></div></div>`]);
+ out.push(['Gasto por zona · '+pl(s.B),`<div class="jl">${s.zz.slice(0,8).map(o=>`<div class="jb"><span>${E2(o.k)}</span><div class="jt"><i style="width:${Math.max(2,100*o.m/mx)}%;background:#4f8cff"></i></div><b>${mm(o.m)} <small>· ${pc(o.C,o.m)} correctivo</small></b></div>`).join('')}</div><div class="jn">Gasto por zona (región del económico) · Matriz/general aparte: ${mm((s.zb.find(o=>o.k===MAT)||{m:0}).m)}</div>`])}}catch(e){console.warn(e)}return out};
+const _t10=window.T10;FN[10]=function(){let h=_t10();try{const s=sum2();if(s){const L=[];const d=s.tA?s.tB.m-s.tA.m:0;L.push(`Gasto de mantenimiento de <b>${pll(s.B)}</b>: <b>${mon(s.tB.m)}</b>${s.tA?`, ${d>=0?'<b style="color:var(--rd)">+':'<b style="color:var(--gn)">−'}${mon(Math.abs(d))} (${sp(100*d/s.tA.m)}%)</b> frente a ${pll(s.A)}`:''}. El <b>${pc(s.tB.C,s.tB.m)}</b> fue correctivo.`);if(s.drv)L.push(`El mayor cambio contra el mes anterior está en <b>${esc(s.drv.k)}</b> (${s.drv.v>=0?'+':'−'}${mon(Math.abs(s.drv.v))}).`);if(s.zz[0])L.push(`La zona con más gasto es <b>${esc(s.zz[0].k)}</b> con ${mon(s.zz[0].m)} (${pc(s.zz[0].m,s.tB.m)} del mes).`);if(s.py.m)L.push(`Acumulado ${s.cy}: <b>${mon(s.ytd.m)}</b>, ${sp(100*(s.ytd.m-s.py.m)/s.py.m)}% contra el mismo periodo de ${+s.cy-1}.`);
+ h+=`<div class="card" style="margin-top:14px"><h3>💰 Hallazgos de gasto de mantenimiento</h3><ul>${L.map(x=>`<li>${x}</li>`).join('')}</ul><p><span class="chip on" onclick="S.tab=12;R()">Ver bloque de Gastos →</span></p></div>`}}catch(e){console.warn(e)}return h};
+const _t0=FN[0];FN[0]=function(){let h=_t0();try{const s=sum2(),B=window.npB&&window.npB();if(s&&B&&B.N){const d=s.tA?s.tB.m-s.tA.m:0,mi=v=>(v/1e6).toFixed(1).replace('.',' punto ');
+ const sh=`En <b>${pll(s.B)}</b> el gasto de mantenimiento fue de <b>${mm(s.tB.m)}</b>${s.tA?`, ${d>=0?'<b style="color:#c4283a">'+sp(100*d/s.tA.m)+'% arriba</b>':'<b style="color:#1e8e5a">'+sp(100*d/s.tA.m)+'%</b>'} del mes anterior`:''}. ${pc(s.tB.C,s.tB.m)} fue correctivo.${s.zz[0]?` Encabeza <b>${esc(s.zz[0].k)}</b> con ${mm(s.zz[0].m)}.`:''}`;
+ const sy=`Gasto de mantenimiento. En ${pll(s.B)} se gastaron ${mi(s.tB.m)} millones de pesos${s.tA?`, ${d>=0?'un '+Math.abs(100*d/s.tA.m).toFixed(0)+' por ciento más':'un '+Math.abs(100*d/s.tA.m).toFixed(0)+' por ciento menos'} que el mes anterior`:''}. El ${(100*s.tB.C/s.tB.m).toFixed(0)} por ciento fue mantenimiento correctivo.${s.zz[0]?` La zona con más gasto es ${s.zz[0].k}.`:''}`;
+ B.N.push({k:'GASTO DE MANTENIMIENTO',h:`${mm(s.tB.m)} en ${pl(s.B)}${s.tA?' · '+(d>=0?'▲':'▼')+Math.abs(100*d/s.tA.m).toFixed(0)+'% vs mes anterior':''}`,show:sh,say:sy});
+ const art=`<div class="npg2" style="margin-top:14px"><article class="na" id="np-n7"><div class="nk">GASTO DE MANTENIMIENTO</div><h3 class="nh">${B.N[7].h}</h3><p class="nb">${sh}</p><div class="npb">${hbar(s.zz.slice(0,6).map(o=>({k:o.k,v:o.m,c:'#1f4fa8'})),mm)}</div></article></div>`;
+ h=h.replace('<div class="imgs npim">',art+'<div class="imgs npim">')}}catch(e){console.warn('gaceta gx',e)}return h};
+
+/* ---------- Excel y presentación ---------- */
+window.gxXlsx=function(){try{const rs=rows(),ps=per(),by=new Map(agg(rs,r=>r.p).map(o=>[o.k,o])),wb=XLSX.utils.book_new(),add2=(n,a)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(a),n.slice(0,31));
+ add2('Filtros',[['Periodo',S.gd+' a '+S.gh],['Tipo de gasto',S.gcl==='T'?'Todos':CLS[S.gcl][0]],['Incluye Matriz',S.gmz?'Sí':'No'],['Zona',S.gz||'Todas'],['Cuenta',S.gcu||'Todas'],['Corte',S.corte]]);
+ add2('Mensual',[['Periodo','Preventivo','Correctivo','Otros','Total']].concat(ps.map(p=>{const o=by.get(p)||{P:0,C:0,O:0,m:0};return[p+(GX.parc.has(p)?' (parcial)':''),o.P,o.C,o.O,o.m]})));
+ const zs=agg(rs,r=>r.z).sort((a,b)=>b.m-a.m);add2('Zonas',[['Zona','Gasto','Preventivo','Correctivo','Otros','Unidades con gasto','Unidades inventario','Gasto por unidad inventario']].concat(zs.map(o=>[o.k,o.m,o.P,o.C,o.O,o.k===MAT?'':o.u.size,INV.z.get(o.k)||'',INV.z.get(o.k)&&o.k!==MAT?o.m/INV.z.get(o.k):''])));
+ add2('Cuentas',[['Cuenta','Clase','Gasto','Movimientos']].concat(agg(rs,r=>r.c).sort((a,b)=>b.m-a.m).map(o=>[o.k,CLS[clsOf(o.k)][0],o.m,o.n])));
+ add2('Tipo de unidad',[['Tipo (modelo inventario)','Unidades inventario','Gasto','Gasto por unidad','Correctivo']].concat(agg(rs.filter(r=>!r.mat),r=>r.t).sort((a,b)=>b.m-a.m).map(o=>[o.k,INV.t.get(o.k)||'',o.m,INV.t.get(o.k)?o.m/INV.t.get(o.k):'',o.C])));
+ const E1=ev();add2('Evaluación móviles',[['Económico','Modelo','Zona','Fallas OT correctivas','Meses con correctivo','Inmovilizaciones','Días detenidos','Gasto correctivo','Gasto total','Costo diario','Unidad problema']].concat(E1.L.sort((a,b)=>b.C-a.C).map(o=>[o.u,o.t,o.z,o.fc,o.mes.size,o.ev,o.dias,o.C,o.m,o.cd,o.pr?'Sí':''])));
+ add2('Proveedores',[['Proveedor','Gasto']].concat(pvRows().map(o=>[o.k,o.m])));
+ XLSX.writeFile(wb,'Gastos_Mtto_Logistica_'+S.gd+'_a_'+S.gh+'.xlsx')}catch(e){alert('No se pudo generar el Excel: '+e.message)}};
+window.gxDeck=function(){try{const rs=rows(),T=tot(rs),ps=per(),by=new Map(agg(rs,r=>r.p).map(o=>[o.k,o])),zs=agg(rs,r=>r.z).sort((a,b)=>b.m-a.m),cs=agg(rs,r=>r.c).sort((a,b)=>b.m-a.m),ts=agg(rs.filter(r=>!r.mat),r=>r.t).sort((a,b)=>b.m-a.m);
+ const ft=()=>`<div class="ft"><img src="${LOGO}" alt=""><span>Dirección General de Operaciones y Logística · Mantenimiento de Activos</span></div>`,mk=(tag,h,sb,b)=>`<section class="sl"><span class="tag">${tag}</span><h2>${h}</h2><p class="sub">${sb||''}</p>${b}${ft()}</section>`;
+ const hb=(l,fmtv)=>{const mx=Math.max(1,...l.map(x=>x.v));return l.map(x=>`<div class="hb"><span>${E(x.k)}</span><div class="tr"><i class="bar" style="--w:${(100*x.v/mx).toFixed(1)}%;background:${x.c||'#4f8cff'}"></i></div><b>${fmtv(x.v)}</b></div>`).join('')};
+ const mx=Math.max(1,...ps.map(p=>(by.get(p)||{m:0}).m)),bw=Math.min(60,900/ps.length-8),gw=900/ps.length;
+ const cols=`<svg viewBox="0 0 920 330" width="100%">${ps.map((p,i)=>{const o=by.get(p)||{P:0,C:0,O:0,m:0},x=10+i*gw+(gw-bw)/2;let y=280;return ['P','C','O'].map((k,j)=>{const h=240*Math.max(0,o[k])/mx;y-=h;return `<rect class="col" style="--d:${(i*.05).toFixed(2)}s" x="${x}" y="${y}" width="${bw}" height="${h}" fill="${CLS[k][1]}"/>`}).join('')+`<text x="${x+bw/2}" y="${y-6}" text-anchor="middle" fill="#fff" font-size="12">${mm(o.m)}</text><text x="${x+bw/2}" y="302" text-anchor="middle" fill="#9fb6ee" font-size="12">${pl(p)}</text>`}).join('')}</svg>`;
+ const s=sum2(),E2=E,ev1=ev().L.filter(o=>o.pr).sort((a,b)=>b.C-a.C).slice(0,8);
+ const cv=`<section class="sl cv"><svg class="sw" viewBox="0 0 620 240" fill="none" stroke="#fff" stroke-linecap="round" opacity=".16"><path d="M10 30v130q0 40 40 40h560" stroke-width="22"/><path d="M60 62v80q0 30 30 30h520" stroke-width="12"/></svg><img class="lg" src="${LOGO}" alt="Paquetexpress"><div class="dg">DIRECCIÓN GENERAL DE OPERACIONES Y LOGÍSTICA</div><div class="ma">MANTENIMIENTO DE ACTIVOS</div><div class="ln"></div><div class="ti" style="font-size:50px">Gasto de mantenimiento de la flota</div><div class="su">${E(pll(S.gd))} a ${E(pll(S.gh))} · Información al corte ${E(S.corte)}</div></section>`;
+ const sl=[cv,
+ mk('RESUMEN','Gasto de mantenimiento',`${pl(S.gd)} a ${pl(S.gh)}`,`<div class="grid g4"><div class="k"><b>${mm(T.m)}</b><span>gasto total</span></div><div class="k"><b style="color:#7ab8ff">${pc(T.P,T.m)}</b><span>preventivo · ${mm(T.P)}</span></div><div class="k"><b style="color:#ff8593">${pc(T.C,T.m)}</b><span>correctivo · ${mm(T.C)}</span></div><div class="k"><b style="color:#ffcf7a">${mm(sum(rs.filter(r=>!r.mat),r=>r.m)/Math.max(1,INV.all))}</b><span>por unidad del inventario</span></div></div><div class="pn" style="margin-top:16px">${cols}</div>`),
+ mk('ZONAS','Gasto por zona','Región del económico según la Flota',`<div class="pn">${hb(zs.slice(0,9).map(o=>({k:o.k,v:o.m})),mm)}</div>`),
+ mk('CUENTAS','¿En qué se va el gasto?','Cuentas contables con mayor gasto',`<div class="pn">${hb(cs.slice(0,9).map(o=>({k:o.k,v:o.m,c:CLS[clsOf(o.k)][1]})),mm)}</div><p class="nt">Azul: preventivo · Rojo: correctivo · Ámbar: otros / insumos</p>`),
+ mk('MODELOS','Gasto por tipo de unidad','Vehículo · marca · modelo del inventario',`<table><tr><th>Tipo</th><th>Unidades</th><th>Gasto</th><th>Por unidad</th></tr>${ts.slice(0,9).map(o=>`<tr><td>${E(o.k)}</td><td>${INV.t.get(o.k)||'–'}</td><td>${mm(o.m)}</td><td>${INV.t.get(o.k)?mm(o.m/INV.t.get(o.k)):'–'}</td></tr>`).join('')}</table>`)];
+ if(ev1.length)sl.push(mk('MÓVILES PROBLEMA','Unidades con mayor gasto correctivo','Fallas, días detenidos y costo',`<table><tr><th>Económico</th><th>Modelo</th><th>Zona</th><th>Fallas</th><th>Días det.</th><th>Correctivo</th></tr>${ev1.map(o=>`<tr><td><b>${E(o.u)}</b></td><td>${E(o.t)}</td><td>${E(o.z)}</td><td>${o.fc}</td><td>${o.dias}</td><td>${mm(o.C)}</td></tr>`).join('')}</table>`));
+ if(s){const d=s.tA?s.tB.m-s.tA.m:0;sl.push(mk('CONCLUSIONES','Lo más relevante','',`<ul class="f"><li>${pll(s.B)}: <b>${mm(s.tB.m)}</b>${s.tA?` (${d>=0?'▲':'▼'} ${sp(100*d/s.tA.m)}% vs ${pll(s.A)})`:''}; el ${pc(s.tB.C,s.tB.m)} fue correctivo.</li>${s.drv?`<li>Mayor cambio contra el mes anterior: ${E(s.drv.k)} (${s.drv.v>=0?'+':'−'}${mm(Math.abs(s.drv.v))}).</li>`:''}${s.zz[0]?`<li>Zona con más gasto: ${E(s.zz[0].k)} (${mm(s.zz[0].m)}).</li>`:''}<li>Acumulado ${s.cy}: ${mm(s.ytd.m)}${s.py.m?` (${sp(100*(s.ytd.m-s.py.m)/s.py.m)}% vs mismo periodo ${+s.cy-1})`:''}.</li></ul>`))}
+ const html=`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gasto de mantenimiento · Paquetexpress</title><style>${DECKCSS}</style></head><body><div class="pb" id="pb"></div><div id="st">${sl.join('')}</div><div id="pg"></div><div class="ctl"><button id="pv" title="Anterior">◀</button><button id="nx" title="Siguiente">▶</button><button id="fs" title="Pantalla completa (F)">⛶</button><button id="pr" title="Imprimir / PDF">🖨</button></div><script>${DECKJS}<\/script></body></html>`;
+ const u=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'})),w=window.open(u,'_blank');if(!w)toast('Tu navegador bloqueó la ventana de la presentación');setTimeout(()=>URL.revokeObjectURL(u),60000)}catch(e){alert('No se pudo generar la presentación: '+e.message)}};
+
+/* ---------- carga de archivos (admin) ---------- */
+const hdrIx=(a,names)=>{for(let h=0;h<Math.min(12,a.length);h++){const r=(a[h]||[]).map(v=>nz(v).normalize('NFD').replace(/[̀-ͯ]/g,''));const ix={};let ok=0;for(const k in names){const j=r.findIndex(v=>names[k].some(n=>n instanceof RegExp?n.test(v):v===n));ix[k]=j;if(j>=0)ok++}if(ix.per>=0&&ix.cta>=0&&ix.mon>=0)return{h,ix}}return null};
+async function gxRead(f,buf){const wb0=XLSX.read(buf,{type:'array',bookSheets:true}),sn=wb0.SheetNames.find(n=>/^detalle$/i.test(n));
+ const ws=XLSX.read(buf,{type:'array',sheets:[sn]}).Sheets[sn],a=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
+ const H=hdrIx(a,{per:['PERIODO'],cta:['NOMBRE CUENTA'],uni:['UNIDAD'],dsc:['DESCRIPCION UNIDAD'],pro:['PROVEEDOR'],ot:['OT'],mon:['MONTO']});if(!H)throw new Error('No encontré las columnas Periodo / Nombre cuenta / Monto en “Detalle” de '+f.name);
+ const {ix}=H,R0=new Map(),PV=new Map(),OT=new Map(),nr={},ds={};let n=0;
+ for(let i=H.h+1;i<a.length;i++){const w=a[i];if(!w)continue;let p=w[ix.per];if(p instanceof Date)p=p.toISOString().slice(0,7);p=String(p==null?'':p).trim();if(!/^\d{4}-\d{2}/.test(p))continue;p=p.slice(0,7);
+  const m=Number(w[ix.mon]);if(!isFinite(m))continue;const cn=nz(w[ix.cta])||'SIN CUENTA',u=ix.uni>=0&&w[ix.uni]!=null?String(w[ix.uni]).trim().toUpperCase():'',k=p+'|'+u+'|'+cn;
+  let o=R0.get(k);if(!o)R0.set(k,o=[p,u,cn,0,0]);o[3]+=m;o[4]++;nr[p]=(nr[p]||0)+1;n++;
+  if(u&&ix.dsc>=0&&w[ix.dsc]&&!ds[u])ds[u]=nz(w[ix.dsc]);
+  const cl=clsOf(cn);if(ix.pro>=0){const pn=nz(w[ix.pro])||'SIN PROVEEDOR',kp2=p+'|'+pn+'|'+cl;PV.set(kp2,[p,pn,cl,(PV.get(kp2)||[0,0,0,0])[3]+m])}
+  if(ix.ot>=0&&w[ix.ot]!=null&&u&&(cl==='C'||cl==='P')){const ko=p+'|'+u+'|'+String(w[ix.ot]).trim();let t=OT.get(ko);if(!t)OT.set(ko,t=[p,u,0,0]);if(cl==='C')t[3]=1;else t[2]=1}}
+ if(!n)throw new Error('No se encontraron movimientos con periodo válido en '+f.name);
+ const OTc=new Map();OT.forEach(t=>{const k=t[0]+'|'+t[1];let o=OTc.get(k);if(!o)OTc.set(k,o=[t[0],t[1],0,0]);if(t[3])o[3]++;else o[2]++});
+ return{rows:[...R0.values()],pv:[...PV.values()],ot:[...OTc.values()],nr,ds,n}}
+function gxMerge(nw,fname){const old=D.gx,pe0=old?old.pe:[],keep=[],kpv=[],kot=[],nr={},ds={};let rep=0,kept=0,add2=0;const take=new Set();
+ Object.keys(nw.nr).forEach(p=>{const prev=old&&old.nr?old.nr[p]:0;if(!prev){take.add(p);add2++}else if(nw.nr[p]>=prev){take.add(p);rep++}else kept++});
+ if(old){const dd0=old.ds||[];old.un.forEach((u,i)=>{if(dd0[i])ds[u]=dd0[i]});Object.keys(old.nr||{}).forEach(p=>{if(!take.has(p))nr[p]=old.nr[p]});
+  old.r.forEach(a=>{const p=old.pe[a[0]];if(!take.has(p))keep.push([p,old.un[a[1]],old.cu[a[2]],a[3],a[4]])});(old.p||[]).forEach(a=>{const p=old.pe[a[0]];if(!take.has(p))kpv.push([p,old.pv[a[1]],['P','C','O'][a[2]],a[3]])});(old.ot||[]).forEach(a=>{const p=old.pe[a[0]];if(!take.has(p))kot.push([p,old.un[a[1]],a[2],a[3]])})}
+ Object.keys(nw.ds).forEach(u=>{ds[u]=nw.ds[u]});
+ const R2=keep.concat(nw.rows.filter(r=>take.has(r[0]))),P2=kpv.concat(nw.pv.filter(r=>take.has(r[0]))),O2=kot.concat(nw.ot.filter(r=>take.has(r[0])));take.forEach(p=>{nr[p]=nw.nr[p]});
+ const idx=a=>{const m=new Map();a.forEach(v=>{if(!m.has(v))m.set(v,m.size)});return m};
+ const pe=[...new Set(R2.map(r=>r[0]))].sort(),pM=new Map(pe.map((p,i)=>[p,i])),cuM=idx(R2.map(r=>r[2])),unM=idx(R2.map(r=>r[1]).concat(O2.map(r=>r[1]))),pvM=idx(P2.map(r=>r[1]));
+ const CI={P:0,C:1,O:2};
+ D.gx={pe,cu:[...cuM.keys()],un:[...unM.keys()],pv:[...pvM.keys()],ds:[...unM.keys()].map(u=>ds[u]||''),
+  r:R2.map(r=>[pM.get(r[0]),unM.get(r[1]),cuM.get(r[2]),Math.round(r[3]),r[4]]),p:P2.map(r=>[pM.get(r[0]),pvM.get(r[1]),CI[r[2]],Math.round(r[3])]),ot:O2.map(r=>[pM.get(r[0]),unM.get(r[1]),r[2],r[3]]),nr,
+  meta:{files:((old&&old.meta&&old.meta.files)||[]).concat([fname]).slice(-6),gen:new Date().toLocaleString('es-MX')}};
+ return `Gastos ✔ (${add2} meses nuevos${rep?`, ${rep} actualizados`:''}${kept?`, ${kept} conservados por tener más movimientos`:''} · ${pe[0]} a ${pe[pe.length-1]})`}
+async function kmRead(buf,fname){const wb=XLSX.read(buf,{type:'array'}),res={};let found=0;
+ wb.SheetNames.forEach(n=>{const a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null,raw:true});for(let h=0;h<Math.min(8,a.length);h++){const r=(a[h]||[]).map(v=>nz(v).normalize('NFD').replace(/[̀-ͯ]/g,'')),e=r.findIndex(v=>/^(ECONOMICO|MOVIL|UNIDAD|NO\.? ?ECONOMICO)$/.test(v)),k=r.findIndex(v=>/^(KM|KMS|KILOMETROS|KILOMETRAJE|KM RECORRIDOS|KILOMETROS RECORRIDOS|DISTANCIA)/.test(v)),p=r.findIndex(v=>/^(PERIODO|MES|FECHA)/.test(v));
+  if(e>=0&&k>=0){for(let i=h+1;i<a.length;i++){const w=a[i];if(!w||w[e]==null)continue;const km=Number(w[k]);if(!isFinite(km)||km<=0)continue;let pp='*';if(p>=0&&w[p]!=null){let v=w[p];if(v instanceof Date)pp=v.toISOString().slice(0,7);else{const s=String(v).trim();const m=s.match(/^(\d{4})[-\/](\d{1,2})/)||s.match(/^(\d{1,2})[-\/](\d{4})/);pp=m?(m[1].length===4?m[1]+'-'+m[2].padStart(2,'0'):m[2]+'-'+m[1].padStart(2,'0')):'*'}}
+   const u=String(w[e]).trim().toUpperCase();(res[u]=res[u]||{})[pp]=((res[u]||{})[pp]||0)+km;found++}break}}});
+ return found?res:null}
+const _lf=window.loadFiles;window.loadFiles=async function(fs){fs=[...fs];const rest=[],out=[],st=$g('pst');let bad=false;
+ for(const f of fs){let done=false;try{const buf=await f.arrayBuffer(),nm=XLSX.read(buf,{type:'array',bookSheets:true}).SheetNames;
+   if(nm.some(n=>/^detalle$/i.test(n))&&nm.some(n=>/^unidades$/i.test(n)||/resumen cc/i.test(n)||/tipo de mant/i.test(n))){if(st)st.textContent='Leyendo gastos de '+f.name+'… (puede tardar unos segundos)';await new Promise(r=>setTimeout(r,30));const nw=await gxRead(f,buf);out.push(gxMerge(nw,f.name));done=true}
+   else if(!nm.some(n=>/^seguimiento$/i.test(n)||/flota\s*log/i.test(n))){const k=await kmRead(buf,f.name);if(k){D.gk=D.gk||{k:{}};Object.keys(k).forEach(u=>{D.gk.k[u]=D.gk.k[u]||{};Object.assign(D.gk.k[u],k[u])});D.gk.meta={f:f.name,gen:new Date().toLocaleString('es-MX')};out.push('Kilometrajes ✔ ('+Object.keys(k).length+' unidades)');done=true}}
+  }catch(e){out.push('Error en '+f.name+': '+(e.message||e));done=true;bad=true}
+  if(!done)rest.push(f)}
+ if(out.length){try{gxBuild()}catch(e){console.warn(e)}}
+ if(rest.length){await _lf(rest);msg=(out.length?out.join(' · ')+' · ':'')+msg;R()}else{msg='Cargado: '+out.join(' · ');R()}
+ const fi=$g('fi');if(fi)try{fi.value=''}catch(_){}};
+
+/* ---------- registro de pestañas ---------- */
+TABS.push('💰 Gastos','🔬 Evaluación de móviles','⛽ Costos por KM');FN[12]=TG;FN[13]=TEv;FN[14]=TKm;GRP.push(['GASTOS',[12,13,14]]);
+const _R=window.R;window.R=function(){const r=_R.apply(this,arguments);try{if(S.tab>=12&&S.tab<=14){const pi=document.querySelector('.ph .pi');if(pi)pi.textContent={12:'💰',13:'🔬',14:'⛽'}[S.tab]}}catch(_){}return r};
+const css=document.createElement('style');css.textContent=`.kpiL{display:grid;grid-template-columns:1fr 1fr;gap:12px}.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mu);margin-bottom:6px}.lg s{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;text-decoration:none}`;document.head.appendChild(css);
+window.__gx=()=>({GXR,INV,GX,UI});
+try{gxBuild()}catch(_){}
 })();
 </script></body></html>
