@@ -1611,7 +1611,7 @@ function cover(o){const cells=[],merges=[],heights={},R=r=>(cells[r]=cells[r]||[
  return{name:o.name,cells,merges,heights,widths:[15,15,15,15,15,15,15,15],freeze:null,filter:null,tab:NAVY,landscape:true}}
 window.XW={table,cover,save,sty};
 /* ---- Excel de la pestaña visible (lee lo que se ve en pantalla) ---- */
-window.gxTabXlsx=function(){try{const X=window.XW,app=document.getElementById('app'),act=app.querySelector('.chip.on'),nm=(act?act.textContent:'Gastos').trim(),
+window.gxTabXlsx=function(){try{const X=window.XW,app=document.getElementById('app'),act=app.querySelector('.gxn .on')||app.querySelector('.chip.on'),nm=(act?act.textContent:'Gastos').trim(),
  pf=(S.pxgl===false?'SIN PXGL':'CON PXGL'),clN={T:'Todos',P:'Preventivo',C:'Correctivo',PC:'Prev. + Corr.',S:'Sin OT'}[S.gcl]||'Todos',
  pl=window.__gx&&window.__gx().pl?window.__gx().pl:(x=>x),sub='Periodo '+S.gd+' a '+S.gh+' · '+clN+' · Región: '+(S.gz||'Todas')+' · '+pf+' · Corte '+(S.corte||'');
  const tx=e=>(e.innerText||e.textContent||'').replace(/\s+/g,' ').trim(),sheets=[],used=new Set();
@@ -1876,17 +1876,28 @@ const mapBy=(rs,kf)=>{const m=new Map();rs.forEach(r=>{const k=kf(r);let o=m.get
 const zlab=z=>realZ(z)?esc(z):'<span style="color:var(--mu)">'+esc(z)+'</span>';
 function zOrder(list,key){const r=list.filter(o=>realZ(key(o))).sort((a,b)=>b.m-a.m),n=list.filter(o=>!realZ(key(o))).sort((a,b)=>b.m-a.m);return r.concat(n)}
 function bar(){const opt=v=>GX.pe.map(p=>`<option value="${p}" ${p===v?'selected':''}>${pl(p)}${GX.parc.has(p)?' (parcial)':''}</option>`).join('');
- const ch=(k,v,l,t)=>`<span class="chip ${S[k]===v?'on':''}" onclick="gxSet('${k}','${v}')"${t?` title="${t}"`:''}>${l}</span>`;
  const zs=[...new Set(GXR.map(r=>r.z))],zr=zs.filter(realZ).sort(),zn2=zs.filter(z=>!realZ(z)).sort(),ts=[...new Set(GXR.filter(r=>!r.mat).map(r=>r.t))].sort(),mos=[...new Set(GXR.map(r=>r.mo).filter(Boolean))].sort().reverse(),cs=[...new Set(GXR.map(r=>r.c))].sort();
  const so=(k,list,all)=>`<select onchange="gxSet('${k}',this.value)"><option value="">${all}</option>${list.map(v=>`<option ${v===S[k]?'selected':''}>${esc(v)}</option>`).join('')}</select>`;
- const act=S.gz||S.gt2||S.gmo||S.gcu||S.gcl!=='T'||!S.gmz;
- return `<div class="fbar" style="flex-direction:column;align-items:stretch;gap:10px"><div class="gxr"><b>Desde</b><select onchange="gxSet('gd',this.value)">${opt(S.gd)}</select><b>Hasta</b><select onchange="gxSet('gh',this.value)">${opt(S.gh)}</select>
- <span class="chip" onclick="gxRange('1')">Último mes</span><span class="chip" onclick="gxRange('3')">3 meses</span><span class="chip" onclick="gxRange('6')">6 meses</span><span class="chip" onclick="gxRange('y')">Año en curso</span><span class="chip" onclick="gxRange('all')">Todo</span></div>
- <div class="gxr"><b>Tipo de gasto</b>${ch('gcl','T','Todos')}${ch('gcl','P','Preventivo')}${ch('gcl','C','Correctivo')}${ch('gcl','PC','Prev. + Corr.','Excluye lo que no tiene orden de trabajo (urea, accesorios, etc.)')}${ch('gcl','S','Sin OT')}</div>
- <div class="gxr"><b>Región</b><select onchange="gxSet('gz',this.value)"><option value="">Todas</option>${zr.length?`<optgroup label="Regiones">${zr.map(v=>`<option ${v===S.gz?'selected':''}>${esc(v)}</option>`).join('')}</optgroup>`:''}<optgroup label="No asignables">${zn2.map(v=>`<option ${v===S.gz?'selected':''}>${esc(v)}</option>`).join('')}</optgroup></select>
- <b>Tipo de unidad</b>${so('gt2',ts,'Todos')}<b>Modelo</b>${so('gmo',mos,'Todos')}<b>Cuenta</b>${so('gcu',cs,'Todas')}</div>
- <div class="gxr"><b>Matriz</b><span class="chip ${S.gmz?'on':''}" onclick="gxSet('gmz',${!S.gmz})" title="Matriz = gasto que no se puede asignar a un económico (general, talleres, sin unidad)">Incluir gastos de Matriz</span>${act?'<button class="fclr" onclick="gxClear()">✕ Limpiar filtros</button>':''}
- <span class="note">Preventivo / correctivo según el nombre de la cuenta contable (si no lo dice, según la orden de trabajo). Clic en cualquier cifra o gráfica para ver de qué se compone.</span></div></div>`}
+ const fld=(l,c,w)=>`<label class="gxfl"${w?` style="grid-column:span ${w}"`:''}><span>${l}</span>${c}</label>`;
+ const seg=(k,items)=>`<div class="gxsg">${items.map(([v,l,t])=>`<button type="button" class="${S[k]===v?'on':''}" onclick="gxSet('${k}','${v}')"${t?` title="${t}"`:''}>${l}</button>`).join('')}</div>`;
+ const ps=GX.pe,f=GX.full,last=ps[ps.length-1],rg=m=>{if(m==='y')return[ps.find(p=>p>=last.slice(0,4)+'-01')||ps[0],last];if(m==='all')return[ps[0],last];const n=+m,ix=Math.max(0,f.length-n);return[f[ix],f[f.length-1]]};
+ const rb=(m,l)=>{const r=rg(m);return`<button type="button" class="${S.gd===r[0]&&S.gh===r[1]?'on':''}" onclick="gxRange('${m}')">${l}</button>`};
+ const nAct=[S.gz,S.gt2,S.gmo,S.gcu].filter(Boolean).length+(S.gcl!=='T'?1:0)+(!S.gmz?1:0);
+ return `<div class="gxf"><div class="gxfh"><div class="gxft"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg><b>Filtros</b>${nAct?`<em>${nAct} activo${nAct>1?'s':''}</em>`:'<em class="z">Sin filtros</em>'}</div>${nAct?'<button type="button" class="gxfc" onclick="gxClear()">Limpiar filtros</button>':''}</div>
+ <div class="gxfg">
+  ${fld('Periodo · desde',`<select onchange="gxSet('gd',this.value)">${opt(S.gd)}</select>`)}
+  ${fld('Periodo · hasta',`<select onchange="gxSet('gh',this.value)">${opt(S.gh)}</select>`)}
+  ${fld('Región',`<select onchange="gxSet('gz',this.value)"><option value="">Todas las regiones</option>${zr.length?`<optgroup label="Regiones">${zr.map(v=>`<option ${v===S.gz?'selected':''}>${esc(v)}</option>`).join('')}</optgroup>`:''}<optgroup label="No asignables">${zn2.map(v=>`<option ${v===S.gz?'selected':''}>${esc(v)}</option>`).join('')}</optgroup></select>`)}
+  ${fld('Tipo de unidad',so('gt2',ts,'Todos los tipos'),2)}
+  ${fld('Modelo (año)',so('gmo',mos,'Todos'))}
+  ${fld('Cuenta contable',so('gcu',cs,'Todas las cuentas'),2)}
+ </div>
+ <div class="gxfr">
+  <div class="gxfk"><span>Atajos de periodo</span><div class="gxsg">${rb('1','Último mes')}${rb('3','3 meses')}${rb('6','6 meses')}${rb('y','Año en curso')}${rb('all','Todo')}</div></div>
+  <div class="gxfk"><span>Tipo de gasto</span>${seg('gcl',[['T','Todos'],['P','Preventivo'],['C','Correctivo'],['PC','Prev. + Corr.','Excluye lo que no tiene orden de trabajo (urea, accesorios, etc.)'],['S','Sin OT']])}</div>
+  <div class="gxfk"><span>Gastos de Matriz</span><button type="button" class="gxsw ${S.gmz?'on':''}" onclick="gxSet('gmz',${!S.gmz})" title="Matriz = gasto que no se puede asignar a un económico (general, talleres, sin unidad)"><i></i><b>${S.gmz?'Incluidos':'Excluidos'}</b></button></div>
+ </div>
+ <div class="gxff">Preventivo y correctivo se determinan por el nombre de la cuenta contable y, si no lo dice, por la orden de trabajo. Toca cualquier cifra o gráfica para ver de qué se compone.</div></div>`}
 const ABR=()=>`<p class="note">${S.pxgl===false?'<b style="color:#ffab40">SIN PXGL</b> · ':''}Periodo ${pl(S.gd)} a ${pl(S.gh)}${GX.pe.some(p=>GX.parc.has(p)&&p>=S.gd&&p<=S.gh)?' · * mes parcial (aún incompleto)':''}.</p>`;
 const mkd=(t,pf,o,az,ac)=>dr(t,pf,o,az,ac);
 function invOf(z){return INV.z.get(z)||0}
@@ -2083,10 +2094,10 @@ function SKm(){const GK=D.gk,has=GK&&GK.k&&Object.keys(GK.k).length;
 /* ---------- pantalla única Gastos ---------- */
 const SUBS=[SRes,SVar,SReg,SCta,SPC,STip,SPv,SCru,SDet,SEv,SKm];
 function TG(){if(!GX)return nodata();DR=[];LASTD=null;PATHR=[];if(S.gst==null||S.gst>=SUBS.length)S.gst=0;
- const subs=`<div class="gxr" style="flex-wrap:wrap;gap:6px">${ST.map((t,i)=>`<span class="chip ${S.gst===i?'on':''}" onclick="gxTab(${i})">${t}</span>`).join('')}</div>`;
+ const subs=`<div class="gxn" role="tablist">${ST.map((t,i)=>`<button type="button" role="tab" class="${S.gst===i?'on':''}" onclick="gxTab(${i})">${t}</button>`).join('')}</div>`;
  let body;try{body=SUBS[S.gst]()}catch(e){console.error(e);body='<div class="card"><p>No se pudo mostrar esta sección: '+esc(e.message)+'</p></div>'}
- return `<h2>Gastos de mantenimiento</h2><p class="sub">Oracle Fusion · Logística · ${pl(GX.pe[0])} a ${pl(GX.pe[GX.pe.length-1])}${GX.g.meta&&GX.g.meta.gen?' · cargado '+esc(GX.g.meta.gen):''}</p>${subs}<div class="gxr" style="justify-content:flex-end;margin:4px 0"><button class="btn" onclick="${S.gst===9?'gxEvXlsx()':'gxTabXlsx()'}">⬇ Descargar Excel de esta pestaña</button></div>${bar()}${ABR()}${body}
- <div class="gxr" style="margin-top:14px"><button class="btn" onclick="${S.gst===9?'gxEvXlsx()':'gxTabXlsx()'}">⬇ Descargar Excel de esta pestaña</button><button class="btn" onclick="gxXlsx()">⬇ Excel completo de Gastos</button><button class="btn" onclick="gxDeck()">▶ Presentación</button></div>`}
+ return `<div class="gxw"><div class="gxh"><div><h2>Gastos de mantenimiento</h2><p class="sub">Oracle Fusion · Logística · ${pl(GX.pe[0])} a ${pl(GX.pe[GX.pe.length-1])}${GX.g.meta&&GX.g.meta.gen?' · cargado '+esc(GX.g.meta.gen):''}</p></div><button type="button" class="gxdl" onclick="${S.gst===9?'gxEvXlsx()':'gxTabXlsx()'}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 20h16"/></svg>Descargar Excel de esta pestaña</button></div>${subs}${bar()}${ABR()}${body}
+ <div class="gxr" style="margin-top:14px"><button class="btn" onclick="${S.gst===9?'gxEvXlsx()':'gxTabXlsx()'}">⬇ Descargar Excel de esta pestaña</button><button class="btn" onclick="gxXlsx()">⬇ Excel completo de Gastos</button><button class="btn" onclick="gxDeck()">▶ Presentación</button></div></div>`}
 
 /* ---------- texto resumen (WhatsApp, Gaceta, Hallazgos) ---------- */
 function sum2(){if(!GX)return null;const full=GX.full,B=full[full.length-1],A=full[full.length-2],all=GXR.filter(r=>S.pxgl!==false||!r.gl);
@@ -2231,6 +2242,31 @@ const _lf=window.loadFiles;window.loadFiles=async function(fs){fs=[...fs];const 
 /* ---------- registro de pestaña ---------- */
 TABS.push('💰 Gastos');FN[12]=TG;GRP.push(['GASTOS',[12]]);
 const _R=window.R;window.R=function(){const r=_R.apply(this,arguments);try{if(S.tab===12){const pi=document.querySelector('.ph .pi');if(pi)pi.textContent='💰'}}catch(_){}return r};
+
+const st2=document.createElement('style');st2.textContent=`
+.gxw{min-width:0;max-width:100%}.gxw .card{overflow-x:auto}#app{min-width:0}.gxh{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin:0 0 14px}.gxh h2{margin:0 0 2px}.gxh .sub{margin:0}
+.gxdl{flex:none;display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--pr),var(--pr2));box-shadow:0 4px 14px rgba(31,79,168,.28);cursor:pointer;transition:transform .15s,box-shadow .15s}.gxdl:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(31,79,168,.34)}
+.gxn{display:flex;gap:2px;overflow-x:auto;scrollbar-width:thin;margin:0 0 16px;border-bottom:1px solid var(--bd)}
+.gxn button{flex:0 0 auto;border:0;background:transparent;color:var(--mu);font-size:13.5px;font-weight:600;padding:11px 15px;border-radius:0;border-bottom:3px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
+.gxn button:hover{color:var(--tx);background:rgba(47,107,255,.06)}.gxn button.on{color:var(--pr);border-bottom-color:var(--pr);background:transparent}
+.gxf{background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 2px 10px rgba(18,35,63,.05);margin:0 0 16px;overflow:hidden}
+.gxfh{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--bd);background:var(--bg2)}
+.gxft{display:flex;align-items:center;gap:9px;color:var(--tx)}.gxft b{font-size:13px;letter-spacing:.02em}.gxft svg{color:var(--pr)}
+.gxft em{font-style:normal;font-size:11.5px;font-weight:700;color:#fff;background:var(--pr);border-radius:999px;padding:2px 10px}.gxft em.z{background:transparent;color:var(--mu);font-weight:500;padding:0}
+.gxfc{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}.gxfc:hover{border-color:var(--r,#d33);color:var(--r,#d33)}
+.gxfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px 16px;padding:16px 18px 6px}
+.gxfl{display:flex;flex-direction:column;gap:6px;min-width:0}.gxfl>span,.gxfk>span{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mu)}
+.gxf select{appearance:none;-webkit-appearance:none;width:100%;box-sizing:border-box;height:38px;padding:0 34px 0 12px;border:1px solid var(--bd);border-radius:9px;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%237a8aa8' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;color:var(--tx);font-size:13px;cursor:pointer;text-overflow:ellipsis}
+.gxf select:hover{border-color:var(--pr)}.gxf select:focus{outline:2px solid rgba(47,107,255,.25);border-color:var(--pr)}
+.gxfr{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-end;padding:14px 18px 16px}.gxfk{display:flex;flex-direction:column;gap:6px}
+.gxsg{display:inline-flex;padding:3px;gap:2px;background:var(--bg2);border:1px solid var(--bd);border-radius:10px}
+.gxsg button{border:0;background:transparent;color:var(--mu);font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.gxsg button:hover{color:var(--tx)}.gxsg button.on{background:var(--card);color:var(--pr);box-shadow:0 1px 4px rgba(18,35,63,.18)}
+.gxsw{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--bd);background:var(--bg2);border-radius:10px;padding:5px 12px 5px 6px;height:38px;cursor:pointer;box-sizing:border-box}
+.gxsw i{position:relative;width:34px;height:20px;border-radius:999px;background:#b8c3d9;transition:background .2s;flex:0 0 auto}.gxsw i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+.gxsw.on i{background:var(--pr)}.gxsw.on i::after{transform:translateX(14px)}.gxsw b{font-size:12.5px;font-weight:600;color:var(--tx)}
+.gxff{padding:10px 18px;border-top:1px solid var(--bd);font-size:11.8px;color:var(--mu);background:var(--bg2)}
+@media(max-width:700px){.gxfg{grid-template-columns:1fr 1fr}.gxfg .gxfl[style]{grid-column:span 2!important}.gxsg{flex-wrap:wrap}}`;document.head.appendChild(st2);
 const css=document.createElement('style');css.textContent=`.pqmod#gxum .card.kpi b{font-size:25px}.pqmod#gxum .card.kpi{min-height:0;padding:12px 14px}.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mu);margin-bottom:6px}.lg s{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;text-decoration:none}.fbar[style*=column]::before{align-self:flex-start}.gxr{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}.gxr>b{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mu)}.gxr select,.gxr input[type=text]{background:var(--card,#fff);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px}.fbar input[type=text]{background:var(--bg2,#0f1a33);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px 10px}`;document.head.appendChild(css);
 window.__gx=()=>({GXR,GXO,INV,GX,UI,TG,SUBS,rb:gxBuild});
 try{gxBuild()}catch(_){}
