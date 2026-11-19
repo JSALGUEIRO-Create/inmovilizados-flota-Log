@@ -1680,9 +1680,9 @@ function rowsOf(a,H,hoja,defV){const g=(w,j)=>j>=0&&w[j]!=null&&String(w[j]).tri
 function invRead(wb){const px=[],gl=[],bj=[],names=wb.SheetNames,hasPX=names.some(n=>/^tractos$/i.test(n));
  names.forEach(n=>{const k=nrm(n);let ent=null,defV='';
   if(/^(TRACTOS|REMOLQUES|DOLLYS)$/.test(k)){ent='PX';defV=k==='TRACTOS'?'TRACTO':k==='REMOLQUES'?'REMOLQUE':'DOLLY'}
-  else if(/^(PGL |DOLLY PGL|PXGL)/.test(k)){ent='GL';defV=/TRACTOS/.test(k)?'TRACTO':/REMOLQ/.test(k)?'REMOLQUE':/DOLLY/.test(k)?'DOLLY':''}
+  else if(/^PXGL/.test(k)){ent='GL';defV=/TRACTOS/.test(k)?'TRACTO':/REMOLQ/.test(k)?'REMOLQUE':/DOLLY/.test(k)?'DOLLY':''}
   else if(k==='BAJAS')ent='BJ';
-  else if(!hasPX&&!/^(REVISION|FER|PORTADA)/.test(k))ent='GL';
+  else if(!hasPX&&!/^(REVISION|FER|PORTADA|PGL |DOLLY PGL|HOJA2)/.test(k))ent='GL';
   if(!ent)return;const a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null,raw:true}),H=hdr(a);if(!H)return;const rs=rowsOf(a,H,n,defV);
   if(ent==='PX')px.push(...rs);else if(ent==='GL')gl.push(...rs);else rs.forEach(r=>bj.push([r.e,r.a,r.v,r.ma,r.mo,r.sr]))});
  return{px,gl,bj,hasPX}}
