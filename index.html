@@ -1687,7 +1687,7 @@ function invRead(wb){const px=[],gl=[],bj=[],names=wb.SheetNames,hasPX=names.som
   if(ent==='PX')px.push(...rs);else if(ent==='GL')gl.push(...rs);else rs.forEach(r=>bj.push([r.e,r.a,r.v,r.ma,r.mo,r.sr]))});
  return{px,gl,bj,hasPX}}
 function glDedupe(list){const m=new Map(),ix=new Map();list.forEach(r=>{const keys=[r.sr&&r.sr.length>6?'S'+r.sr:'',...[r.e,r.a].filter(Boolean).map(x=>'I'+nid(x))].filter(Boolean);let o=null;for(const k of keys){if(ix.has(k)){o=ix.get(k);break}}
-  if(!o){o={...r,al:[]};m.set(m.size,o)}
+  if(!o){o={...r,al:[],hs:[]};m.set(m.size,o)}if(o.hs&&r.h&&!o.hs.includes(r.h))o.hs.push(r.h);
   [r.e,r.a].filter(Boolean).forEach(x=>{if(!o.al.includes(x))o.al.push(x)});if(!o.sr&&r.sr)o.sr=r.sr;
   // la id principal es la de la flota PXGL (PXM...) cuando existe
   if(/^PXM/.test(r.e)&&!/^PXM/.test(o.e)){o.e=r.e}
@@ -1704,7 +1704,7 @@ function invPre(){const I=D&&D.inv;if(!I||!I.px||!D.mm)return;const key=r=>r.ma+
  I.px.filter(r=>r.h==='TRACTOS').forEach(add);(I.gl||[]).filter(r=>r.v==='TRACTOCAMIÓN').forEach(r=>{add(r);(r.al||[]).forEach(x=>add({...r,e:x}))})}
 function descC(r){return r.v==='REMOLQUE'?('REMOLQUE'+(r.pi?' '+r.pi:'')):r.v==='DOLLY'?'DOLLY':(r.tp||'')}
 function invPost(){INVR={bajasEnFlota:[],sinFlota:[],soloFlota:[],sinRegion:[]};const I=D&&D.inv;
- if(I&&I.gl)I.gl=I.gl.filter(x=>!/^(PGL |DOLLY PGL|HOJA)/i.test(String(x.h||'').trim()));
+ window.PXOLD=!!(I&&I.gl&&I.gl.length&&I.gl.some(x=>!x.hs));
  const old=FL.slice(),byId=new Map(old.map(f=>[nz(f.e),f])),gs=new Set();PXS=new Set();window.PXS=PXS;
  if(I){const bj=new Set();(I.bj||[]).forEach(b=>{if(b[0])bj.add(nz(b[0]));if(b[1])bj.add(nz(b[1]))});
   const px=new Set(),nf=[],seen=new Set();
@@ -1734,7 +1734,7 @@ try{const v=localStorage.getItem('px_gl');if(v==='0')S.pxgl=false}catch(_){}
 
 /* ---------- botón CONSIDERAR PXGL ---------- */
 function pxUI(){let b=$g('pxg');if(!b){const nav=$g('nav');if(!nav||!nav.parentNode)return;b=document.createElement('div');b.id='pxg';nav.parentNode.insertBefore(b,nav)}
- const on=hasGl();b.innerHTML=`<button class="pxt ${on?'on':'off'}" onclick="pxTog()" title="Prende o apaga PXGL en TODOS los indicadores del portal (Flota, detenciones, Up Time, gastos, etc.)"><span class="pxs"><i></i></span><span class="pxl"><b>CONSIDERAR PXGL</b><small>${on?'Con PXGL · todos los indicadores':'Sin PXGL · se excluye de todo'}</small><small>${window.PXI?PXI.tr+' tractos PXGL · '+PXI.det+' detenidos hoy':''}</small></span></button>`}
+ const on=hasGl();b.innerHTML=`<button class="pxt ${on?'on':'off'}" onclick="pxTog()" title="Prende o apaga PXGL en TODOS los indicadores del portal (Flota, detenciones, Up Time, gastos, etc.)"><span class="pxs"><i></i></span><span class="pxl"><b>CONSIDERAR PXGL</b><small>${on?'Con PXGL · todos los indicadores':'Sin PXGL · se excluye de todo'}</small><small>${window.PXI?PXI.tr+' tractos PXGL · '+PXI.det+' detenidos hoy':''}</small>${window.PXOLD?'<small style="color:#fde68a">⚠ Inventario guardado con versión anterior: vuelve a cargar el Excel y genera el data.enc.json</small>':''}</span></button>`}
 window.pxTog=function(){S.pxgl=!hasGl();try{localStorage.setItem('px_gl',S.pxgl?'1':'0')}catch(_){}const f=S.from,t=S.to,c=S.corte;try{ingest()}catch(e){console.warn(e)}if(f){S.from=f;S.to=t;S.corte=c}pxUI();R()};
 const _R=window.R;window.R=function(){const r=_R.apply(this,arguments);try{pxUI();const ph=document.querySelector('.ph');if(ph){ph.querySelectorAll('.pxb').forEach(e=>e.remove());ph.insertAdjacentHTML('beforeend',`<span class="pxb ${hasGl()?'on':'off'}">${hasGl()?'CON PXGL':'SIN PXGL'}</span>`)}}catch(_){}return r};
 
@@ -1743,7 +1743,7 @@ const _lf=window.loadFiles;window.loadFiles=async function(fs){fs=[...fs];const 
  for(const f of fs){let done=false;try{const buf=await f.arrayBuffer(),wb0=XLSX.read(buf,{type:'array',bookSheets:true}),nm=wb0.SheetNames,isInv=nm.some(n=>/^tractos$/i.test(n))&&nm.some(n=>/^remolques$/i.test(n)),isGl=!isInv&&nm.length<=3&&!nm.some(n=>/^(seguimiento|detalle)$/i.test(n)||/flota\s*log/i.test(n));
    if(isInv||isGl){const wb=XLSX.read(buf,{type:'array'}),r=invRead(wb);if(isGl&&!r.gl.length)throw new Error('No reconocí las columnas de inventario en '+f.name);
     const old=D.inv||{px:[],gl:[],bj:[],meta:{files:[]}};
-    D.inv={v:1,px:r.hasPX?r.px:old.px,gl:glDedupe((r.hasPX?[]:(old.gl||[]).filter(x=>!/^(PGL |DOLLY PGL|HOJA)/i.test(String(x.h||'').trim()))).concat(r.gl)),bj:r.bj.length?r.bj:old.bj||[],meta:{files:((old.meta&&old.meta.files)||[]).concat([f.name]).slice(-6),gen:new Date().toLocaleString('es-MX')}};
+    D.inv={v:1,px:r.hasPX?r.px:old.px,gl:glDedupe((r.hasPX?[]:(old.gl||[])).concat(r.gl)),bj:r.bj.length?r.bj:old.bj||[],meta:{files:((old.meta&&old.meta.files)||[]).concat([f.name]).slice(-6),gen:new Date().toLocaleString('es-MX')}};
     out.push(`Inventario ✔ (${f.name}: ${r.hasPX?r.px.length+' Paquetexpress · ':''}${D.inv.gl.length} PXGL${r.bj.length?' · '+r.bj.length+' bajas':''})`);done=true}
   }catch(e){out.push('Error en '+f.name+': '+(e.message||e));done=true}
   if(!done)rest.push(f)}
