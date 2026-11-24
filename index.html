@@ -48,7 +48,7 @@ body{padding-left:272px}
 .sbh{display:flex;align-items:center;gap:12px;padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
 .sbh img{width:46px;height:46px;border-radius:12px;background:#0a4dff;padding:4px;object-fit:contain;box-shadow:0 4px 14px rgba(10,77,255,.45)}
 .sbh b{display:block;font-size:14px;letter-spacing:.14em;color:#fff;font-weight:800}.sbh span{font-size:12px;color:#8fb0f5;letter-spacing:.04em}
-.sbc{margin:12px 14px 2px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.06);font-size:11.5px;color:#a9c0f0;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.sbc b{color:#fff}
+.sbc{margin:12px 14px 2px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.06);font-size:11.5px;color:#a9c0f0;display:flex;justify-content:space-between;gap:8px}.sbc b{color:#fff}
 .sbs{flex:1;overflow-y:auto;padding:6px 12px 12px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
 .sbs::-webkit-scrollbar{width:6px}.sbs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:6px}
 #nav{display:block}
@@ -392,7 +392,7 @@ const GRP=[['PANORAMA',[0,1,10]],['ANÁLISIS',[2,3,4,6,7]],['OPERACIÓN',[5,8,9]
 const sbC=()=>document.body.classList.remove('sbo');
 function R(){if(S.tab===11&&!isAdm())S.tab=0;const it=i=>{const m=TABS[i].match(/^(\S+)\s+(.*)$/),lb=i===11?'Administración':m[2];return `<button class="si ${S.tab==i?'on':''}" onclick="S.tab=${i};R();scrollTo(0,0);sbC()"><i>${m[1]}</i><span>${lb}</span></button>`};
  $('nav').innerHTML=(isAdm()?`<div class="sg">ADMINISTRACIÓN</div>`+it(11):'')+GRP.map(g=>`<div class="sg">${g[0]}</div>`+g[1].map(it).join('')).join('');
- try{const m=TABS[S.tab].match(/^(\S+)\s+(.*)$/);$('tbt').textContent=(S.tab===11?'Administración':m[2]);$('tbs').textContent='Inmovilizados flota logística · Paquetexpress';$('tbc').textContent='Corte '+(S.corte||'');$('sbc').innerHTML='<span>Corte de datos</span><b>'+(S.corte||'')+'</b><small style=flex-basis:100%;opacity:.6;font-size:10px;margin-top:3px>Versión 24-nov-2026 · B</small>';$('av').textContent=(WHO||'?').trim().charAt(0).toUpperCase();$('rol').textContent=ROLE==='admin'?'Administrador':'Consulta'}catch(_){}
+ try{const m=TABS[S.tab].match(/^(\S+)\s+(.*)$/);$('tbt').textContent=(S.tab===11?'Administración':m[2]);$('tbs').textContent='Inmovilizados flota logística · Paquetexpress';$('tbc').textContent='Corte '+(S.corte||'');$('sbc').innerHTML='<span>Corte de datos</span><b>'+(S.corte||'')+'</b>';$('av').textContent=(WHO||'?').trim().charAt(0).toUpperCase();$('rol').textContent=ROLE==='admin'?'Administrador':'Consulta'}catch(_){}
  $('app').innerHTML=FN[S.tab]();sortable();if(S.tab===11)gInit()}
 function sortable(){if(!document.querySelectorAll)return;document.querySelectorAll('#app table').forEach((t,ti)=>{const key=S.tab+'_'+ti,ths=[...t.querySelectorAll('th')],tb=t.tBodies[0]||t;
  const val=c=>{const s=(c?c.textContent:'').trim().replace(/,/g,'');return /^-?\d+(\.\d+)?%?$/.test(s)?parseFloat(s):s};
@@ -1920,11 +1920,8 @@ function bar(){const opt=v=>GX.pe.map(p=>`<option value="${p}" ${p===v?'selected
   ${fld('Región',`<select onchange="gxSet('gz',this.value)"><option value="">Todas las regiones</option>${zr.length?`<optgroup label="Regiones">${zr.map(v=>`<option ${v===S.gz?'selected':''}>${esc(v)}</option>`).join('')}</optgroup>`:''}<optgroup label="No asignables">${zn2.map(v=>`<option ${v===S.gz?'selected':''}>${esc(v)}</option>`).join('')}</optgroup></select>`)}
   ${fld('Tipo de unidad',so('gt2',ts,'Todos los tipos'),2)}
   ${fld('Modelo (año)',so('gmo',mos,'Todos'))}
+  ${fld('Cuenta contable',`<button type="button" class="gxcb ${(S.gcxS&&S.gcxS.size)||S.gcu?'on':''}" onclick="gxCuOpen(this)"><span>${S.gcu?'Solo: '+esc(S.gcu):(S.gcxS&&S.gcxS.size)?(cs.length-S.gcxS.size)+' de '+cs.length+' seleccionadas':'Todas las cuentas ('+cs.length+')'}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>`,2).replace('<label','<div').replace('</label>','</div>')}
  </div>
- ${(()=>{const bs=sel(GXR,{nocu:true,nocx:true}),mp=new Map();GXR.forEach(r=>{if(!mp.has(r.c))mp.set(r.c,{c:r.c,m:0,k:r.k})});bs.forEach(r=>{mp.get(r.c).m+=r.m});const L=[...mp.values()].sort((x,y)=>y.m-x.m||x.c.localeCompare(y.c)),ex=S.gcxS||new Set(),nx=L.filter(x=>ex.has(x.c)).length;
-  return `<div class="gxcw"><div class="gxcwh"><b>Cuentas contables</b><span>${nx?`<em>${L.length-nx} de ${L.length} incluidas · ${nx} excluida${nx>1?'s':''}</em>`:`Todas incluidas (${L.length})`} · clic en una cuenta para excluirla de los números</span><span class="gxcwa"><button type="button" onclick="gxCx('*todas')">Todas</button><button type="button" onclick="gxCx('*ninguna')">Ninguna</button></span></div>
-  ${S.gcu?`<div class="gxcsolo">Viendo solo la cuenta <b>${esc(S.gcu)}</b> <button type="button" onclick="gxSet('gcu','')">Quitar ✕</button></div>`:''}
-  <div class="gxcc">${L.map(x=>`<button type="button" class="${ex.has(x.c)?'off':'on'}" data-c="${esc(x.c)}" onclick="gxCx(this.dataset.c)" title="${ex.has(x.c)?'Excluida · clic para volver a incluir':'Clic para excluir esta cuenta'}"><i></i><span>${esc(x.c)}</span><small>${x.m?mm(x.m):'–'}</small></button>`).join('')}</div></div>`})()}
  <div class="gxfr">
   <div class="gxfk"><span>Atajos de periodo</span><div class="gxsg">${rb('1','Último mes')}${rb('3','3 meses')}${rb('6','6 meses')}${rb('y','Año en curso')}${rb('all','Todo')}</div></div>
   <div class="gxfk"><span>Tipo de gasto</span>${seg('gcl',[['T','Todos'],['P','Preventivo'],['C','Correctivo'],['PC','Prev. + Corr.','Excluye lo que no tiene orden de trabajo (urea, accesorios, etc.)'],['S','Sin OT']])}</div>
@@ -1933,7 +1930,27 @@ function bar(){const opt=v=>GX.pe.map(p=>`<option value="${p}" ${p===v?'selected
  </div>
  <div class="gxff">Preventivo y correctivo se determinan por el nombre de la cuenta contable y, si no lo dice, por la orden de trabajo. Toca cualquier cifra o gráfica para ver de qué se compone.</div></div>`}
 
-window.gxCx=c=>{const all=[...new Set(GXR.map(r=>r.c))];let ex=new Set(S.gcxS||[]);if(c==='*todas')ex=new Set();else if(c==='*ninguna')ex=new Set(all);else{ex.has(c)?ex.delete(c):ex.add(c)}S.gcx=[...ex];S.gcxS=ex.size?ex:null;if(ex.size)S.gcu='';const y=window.scrollY,m=document.querySelector('main,#app'),t=m?m.scrollTop:0;R();requestAnimationFrame(()=>{window.scrollTo(0,y);if(m)m.scrollTop=t})};
+window.gxCuX=()=>{const o=document.getElementById('gxpop');if(o)o.remove();document.removeEventListener('mousedown',window.__gxcd,true);document.removeEventListener('keydown',window.__gxck,true)};
+window.gxCuOpen=btn=>{gxCuX();const base=sel(GXR,{nocu:true,nocx:true}),m=new Map();
+ GXR.forEach(r=>{if(!m.has(r.c))m.set(r.c,{c:r.c,m:0,n:0})});base.forEach(r=>{const o=m.get(r.c);o.m+=r.m;o.n++});
+ const L=window.__CUL=[...m.values()].sort((a,b)=>b.m-a.m||a.c.localeCompare(b.c)),ex=S.gcxS||new Set();
+ const o=document.createElement('div');o.id='gxpop';
+ o.innerHTML=`<div class="gxpq"><input type="text" id="gxpq" placeholder="Buscar…" oninput="gxCuQ(this.value)" autocomplete="off"></div>
+ <div class="gxpl" id="gxpl"><label class="gxpr gxpa"><input type="checkbox" id="gxpall" onchange="gxCuAll(this.checked)"><span>(Seleccionar todo)</span></label>${L.map((x,i)=>`<label class="gxpr" data-q="${esc(x.c.toLowerCase())}"><input type="checkbox" data-i="${i}" ${ex.has(x.c)?'':'checked'} onchange="gxCuT()"><span class="gxpn">${esc(x.c)}</span><span class="gxpm">${x.m?mm(x.m):'–'}</span></label>`).join('')}</div>
+ <div class="gxpf"><span id="gxpt"></span><span><button type="button" class="gxp2" onclick="gxCuX()">Cancelar</button><button type="button" class="gxp1" onclick="gxCuOk()">Aceptar</button></span></div>`;
+ document.body.appendChild(o);const r=btn.getBoundingClientRect(),w=Math.max(380,r.width),vw=innerWidth,vh=innerHeight;
+ o.style.width=Math.min(w,vw-16)+'px';o.style.left=Math.max(8,Math.min(r.left,vw-Math.min(w,vw-16)-8))+'px';
+ const below=vh-r.bottom-12,up=r.top-12,useUp=below<320&&up>below,mh=Math.max(240,Math.min(560,(useUp?up:below)));
+ o.style.maxHeight=mh+'px';if(useUp){o.style.bottom=(vh-r.top+6)+'px'}else{o.style.top=(r.bottom+6)+'px'}
+ window.__gxcd=e=>{if(!o.contains(e.target)&&!btn.contains(e.target))gxCuX()};window.__gxck=e=>{if(e.key==='Escape')gxCuX()};
+ setTimeout(()=>{document.addEventListener('mousedown',window.__gxcd,true);document.addEventListener('keydown',window.__gxck,true)},0);
+ gxCuT();document.getElementById('gxpq').focus()};
+window.gxCuQ=q=>{q=q.toLowerCase().trim();document.querySelectorAll('#gxpl .gxpr[data-q]').forEach(r=>{r.style.display=!q||r.dataset.q.includes(q)?'':'none'});gxCuT()};
+window.gxCuAll=v=>{document.querySelectorAll('#gxpl .gxpr[data-q]').forEach(r=>{if(r.style.display!=='none')r.querySelector('input').checked=v});gxCuT()};
+window.gxCuT=()=>{const cs=[...document.querySelectorAll('#gxpl .gxpr[data-q] input')],vis=cs.filter(c=>c.closest('.gxpr').style.display!=='none');let t=0,n=0;cs.forEach(c=>{if(c.checked){n++;t+=window.__CUL[+c.dataset.i].m}});
+ const a=document.getElementById('gxpall');if(a){const k=vis.filter(c=>c.checked).length;a.checked=vis.length>0&&k===vis.length;a.indeterminate=k>0&&k<vis.length}
+ document.getElementById('gxpt').innerHTML=`<b>${n}</b> de ${cs.length} · ${mon(t)}`};
+window.gxCuOk=()=>{const ex=new Set();document.querySelectorAll('#gxpl .gxpr[data-q] input').forEach(c=>{if(!c.checked)ex.add(window.__CUL[+c.dataset.i].c)});S.gcx=[...ex];S.gcxS=ex.size?ex:null;if(ex.size)S.gcu='';const y=scrollY;gxCuX();R();requestAnimationFrame(()=>scrollTo(0,y))};
 const ABR=()=>`<p class="note">${S.pxgl===false?'<b style="color:#ffab40">SIN PXGL</b> · ':''}Periodo ${pl(S.gd)} a ${pl(S.gh)}${GX.pe.some(p=>GX.parc.has(p)&&p>=S.gd&&p<=S.gh)?' · * mes parcial (aún incompleto)':''}.</p>`;
 const mkd=(t,pf,o,az,ac)=>dr(t,pf,o,az,ac);
 function invOf(z){return INV.z.get(z)||0}
@@ -2330,9 +2347,9 @@ const st2=document.createElement('style');st2.textContent=`
 .gxn{display:flex;gap:2px;overflow-x:auto;scrollbar-width:thin;margin:0 0 16px;border-bottom:1px solid var(--bd)}
 .gxn button{flex:0 0 auto;border:0;background:transparent;color:var(--mu);font-size:13.5px;font-weight:600;padding:11px 15px;border-radius:0;border-bottom:3px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
 .gxn button:hover{color:var(--tx);background:rgba(47,107,255,.06)}.gxn button.on{color:var(--pr);border-bottom-color:var(--pr);background:transparent}
-.gxcw{padding:6px 18px 14px}.gxcwh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 10px;font-size:12px}.gxcwh b{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#5b6b85}.gxcwh>span{opacity:.75}.gxcwh em{font-style:normal;color:var(--pr);font-weight:700;opacity:1}.gxcwa{margin-left:auto}.gxcwa button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:3px 10px;margin-left:6px;cursor:pointer;font-size:12px}.gxcwa button:hover{border-color:var(--pr);color:var(--pr)}
-.gxcc{display:flex;flex-wrap:wrap;gap:7px}.gxcc button{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:999px;padding:6px 12px 6px 8px;cursor:pointer;font:inherit;font-size:12.5px;transition:.12s}.gxcc button i{width:16px;height:16px;border-radius:50%;border:2px solid #b8c3d6;flex:none;position:relative}.gxcc button.on{border-color:rgba(47,107,255,.45);background:rgba(47,107,255,.07)}.gxcc button.on i{background:var(--pr);border-color:var(--pr)}.gxcc button.on i::after{content:"";position:absolute;left:3px;top:0;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}.gxcc button small{opacity:.6;font-weight:600}.gxcc button.off{opacity:.55;background:transparent}.gxcc button.off span{text-decoration:line-through}.gxcc button:hover{border-color:var(--pr)}
-.gxcsolo{margin:0 0 8px;font-size:12.5px;background:rgba(245,158,11,.12);border-radius:8px;padding:6px 10px}.gxcsolo button{border:0;background:transparent;color:var(--pr);cursor:pointer;font-weight:700}
+.gxcb{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:42px;padding:0 14px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font:inherit;font-size:13.5px;cursor:pointer;text-align:left}.gxcb:hover{border-color:var(--pr)}.gxcb.on{border-color:var(--pr);background:rgba(47,107,255,.07);color:var(--pr);font-weight:600}.gxcb span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#gxpop{position:fixed;z-index:400;background:var(--card,#fff);color:var(--tx,#0f172a);border:1px solid var(--bd,#d6dcea);border-radius:12px;box-shadow:0 18px 50px rgba(8,20,60,.28);display:flex;flex-direction:column;overflow:hidden}.gxpq{padding:10px;border-bottom:1px solid var(--bd,#e3e8f2)}.gxpq input{width:100%;box-sizing:border-box;height:34px;padding:0 10px;border:1px solid var(--bd,#d6dcea);border-radius:8px;background:transparent;color:inherit;font:inherit;font-size:13px}.gxpl{overflow:auto;padding:4px 6px;flex:1;min-height:80px}.gxpr{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:7px;cursor:pointer;font-size:13px}.gxpr:hover{background:rgba(47,107,255,.09)}.gxpr input{width:16px;height:16px;accent-color:var(--pr,#2f6bff);flex:none}.gxpa{font-weight:700;border-bottom:1px solid var(--bd,#e3e8f2);border-radius:0;margin-bottom:3px}.gxpn{flex:1;min-width:0}.gxpm{opacity:.6;font-size:12px;font-weight:600;white-space:nowrap}
+.gxpf{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--bd,#e3e8f2);font-size:12.5px;background:rgba(120,140,180,.07)}.gxpf button{height:32px;padding:0 16px;border-radius:8px;border:1px solid var(--bd,#d6dcea);background:var(--card,#fff);color:inherit;cursor:pointer;font-weight:600;margin-left:6px}.gxpf .gxp1{background:var(--pr,#2f6bff);border-color:var(--pr,#2f6bff);color:#fff}
 .gxf{background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 2px 10px rgba(18,35,63,.05);margin:0 0 16px;overflow:hidden}
 .gxfh{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--bd);background:var(--bg2)}
 .gxft{display:flex;align-items:center;gap:9px;color:var(--tx)}.gxft b{font-size:13px;letter-spacing:.02em}.gxft svg{color:var(--pr)}
